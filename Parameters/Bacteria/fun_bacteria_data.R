@@ -33,12 +33,15 @@ Bacteria_data <- function(database) {
   
   
   
-  Results_import <-  tbl(con, 'VW_Bacteria') |> 
-    #filter(AU_ID %in% AUs) |> 
-    collect()
+    Results_import <-  tbl(con, 'VW_Bacteria') |> 
+      #filter(AU_ID %in% AUs) |> 
+      collect()
   
   # Set factors to characters
   Results_import %>% map_if(is.factor, as.character) %>% as_tibble -> Results_import 
+  Results_import <- Results_import |> 
+    mutate(Result_UID = as.character(Result_UID)) |> 
+    mutate(SampleStartDate = lubridate::ymd(SampleStartDate))
   
   # Results_import <- Results_import |> 
   #   mutate(Result_UID = Result_UID)
