@@ -1,5 +1,4 @@
-require(rgdal)
-require(RODBC)
+
 library(tidyverse)
 library(odeqIRtools)
 library(openxlsx)
@@ -12,15 +11,17 @@ DO_data <- function(database) {
   print("Fetch DO data from IR database")
   #connect to IR database view as a general user
   # import Temperature data
-  IR.sql <-   odbcConnect(database)
+  # import Temperature data
+  IR.sql <-  DBI::dbConnect(odbc::odbc(), 'IR_dev')
   
   
   # Get data from IR database where wqstd_code = 12, ResStatusName = Final, 
   # Join with Crit_Temp to get temperature Criteria and spawn ?
-  Results_import <-    sqlFetch(IR.sql, "dbo.VW_DO") 
+  Results_import <-    tbl(IR.sql, "VW_DO") |> 
+    collect()
   
   
-  odbcClose(IR.sql)
+  DBI::dbDisconnect(IR.sql)
   
   
   

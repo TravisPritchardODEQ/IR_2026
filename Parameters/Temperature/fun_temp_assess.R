@@ -10,7 +10,7 @@ fun_temp_analysis <- function(df, write_excel = TRUE){
   
   # Testing ---------------------------------------------------------------------------------------------------------
   
-  # df <- temp_results
+  #df <- Results_censored_temp
   # write_excel = TRUE
   
   
@@ -179,32 +179,32 @@ fun_temp_analysis <- function(df, write_excel = TRUE){
     group_by(AU_ID, AU_GNIS_Name, Pollu_ID, wqstd_code, period) %>%
     summarise(stations =  stringr::str_c(unique(stations), collapse = "; "),
               distinct_years_sufficient_crit_period_max = max(distinct_years_sufficient_crit_period),
-              IR_category_GNIS_24 = max(IR_category),
+              IR_category_GNIS_26 = max(IR_category),
               Rationale_GNIS = str_c(Rationale,collapse =  " ~ " ) ) %>% 
-    mutate(IR_category_GNIS_24 = factor(IR_category_GNIS_24, levels=c('Unassessed', "3", "3B", "2", "5" ), ordered=TRUE)) |> 
-     mutate(recordID = paste0("2024-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code,"-", period ))  
+    mutate(IR_category_GNIS_26 = factor(IR_category_GNIS_26, levels=c('Unassessed', "3", "3B", "2", "5" ), ordered=TRUE)) |> 
+     mutate(recordID = paste0("2026-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code,"-", period ))  
   
   WS_GNIS_rollup <- join_prev_assessments(WS_GNIS_rollup, AU_type = "WS")
   
   
+
   
-  
-  WS_GNIS_rollup_delist <- WS_GNIS_rollup |> 
-    mutate(Delist_eligability = case_when( prev_GNIS_category %in% c('5',  '4A') & IR_category_GNIS_24 == '2' & distinct_years_sufficient_crit_period_max >=3 ~ "Delist Eligible",
-                               prev_GNIS_category %in% c('5',  '4A') & IR_category_GNIS_24 == '2' & distinct_years_sufficient_crit_period_max < 3 ~ 'Insuffcient data to delist')) |> 
+  WS_GNIS_rollup_delist <- WS_GNIS_rollup |>
+    mutate(Delist_eligability = case_when( prev_GNIS_category %in% c('5',  '4A') & IR_category_GNIS_26 == '2' & distinct_years_sufficient_crit_period_max >=3 ~ "Delist Eligible",
+                               prev_GNIS_category %in% c('5',  '4A') & IR_category_GNIS_26 == '2' & distinct_years_sufficient_crit_period_max < 3 ~ 'Insuffcient data to delist')) |>
     mutate(final_GNIS_cat = case_when(Delist_eligability == "Delist Eligible" ~ '2',
                                       TRUE ~ final_GNIS_cat),
            Rationale_GNIS = case_when(Delist_eligability %in% c("Delist Eligible",'Insuffcient data to delist')  ~paste0(Delist_eligability, "- ", Rationale_GNIS),
-                                      TRUE ~ Rationale_GNIS)) |> 
-    mutate(final_GNIS_cat = factor(final_GNIS_cat,levels=c("Unassessed",'3D',"3", "3B","3C", "2", "5", '4A', '4B', '4C'), ordered=TRUE)) |> 
-    mutate(status_change = case_when(final_GNIS_cat == prev_GNIS_category & IR_category_GNIS_24 == 'Unassessed' ~ "No change in status- No new assessment",
+                                      TRUE ~ Rationale_GNIS)) |>
+    mutate(final_GNIS_cat = factor(final_GNIS_cat,levels=c('Unassessed', '3D',"3", "3B","3C", "2", "5",'5C', '4A', '4B', '4C'), ordered=TRUE)) |>
+    mutate(status_change = case_when(final_GNIS_cat == prev_GNIS_category & IR_category_GNIS_26 == 'Unassessed' ~ "No change in status- No new assessment",
                                      final_GNIS_cat == prev_GNIS_category ~ "No change in status- Assessed",
                                      final_GNIS_cat == '2' & prev_GNIS_category %in% c('5','4A','4B', '4C') ~ "Delist",
                                      prev_GNIS_category == 'Unassessed' ~ "New Assessment",
                                      prev_GNIS_category == '2' & final_GNIS_cat  %in% c('5','4A','4B', '4C') ~ "Attain to Impaired",
                                      prev_GNIS_category %in% c('3D','3','3B', '3C') & final_GNIS_cat %in% c('5','4A','4B', '4C') ~ "Insufficient to Impaired",
                                      prev_GNIS_category %in% c('3D','3','3B', '3C') & final_GNIS_cat %in% c('2') ~ "Insufficient to Attain"
-                                     )) |> 
+                                     )) |>
     mutate(Char_Name = 'Temperature, water')
   
   # WS_AU_rollup <- WS_GNIS_rollup_delist %>%
@@ -284,7 +284,7 @@ fun_temp_analysis <- function(df, write_excel = TRUE){
                                  max_3yr_excursions == 0 & distinct_years_sufficient_crit_period < 1~ paste0("Insufficient data: insufficient data collected during critical warm period"),
                                  TRUE ~ 'Attaining: No 7DADM excursions'))%>%
     mutate(IR_category = factor(IR_category, levels=c("3", "3B", "2", "5" ), ordered=TRUE)) %>%
-    mutate(recordID = paste0("2022-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code,"-", period )) |> 
+    mutate(recordID = paste0("2026-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code,"-", period )) |> 
     mutate(Delist_eligability = case_when(distinct_years_sufficient_crit_period >=3 ~ 1,
                                           TRUE ~ 0))
                                                                                                                  
@@ -311,7 +311,7 @@ fun_temp_analysis <- function(df, write_excel = TRUE){
   #                                    prev_category %in% c('3D','3','3B', '3C') & final_AU_cat %in% c('5','4A','4B', '4C') ~ "Insufficient to Impaired",
   #                                    prev_category %in% c('3D','3','3B', '3C') & final_AU_cat %in% c('2') ~ "Insufficient to Attain"
   #   ))|> 
-  #   mutate(year_last_assessed = case_when(status_change != 'No change in status- No New Assessment' ~"2024",
+  #   mutate(year_last_assessed = case_when(status_change != 'No change in status- No New Assessment' ~"2026",
   #                                         TRUE ~ year_last_assessed))
   # 
   
@@ -489,10 +489,10 @@ fun_temp_analysis <- function(df, write_excel = TRUE){
     group_by(AU_ID, AU_GNIS_Name, Pollu_ID, wqstd_code, period) %>%
     summarise(stations =  stringr::str_c(unique(MLocID), collapse = "; "),
               distinct_years_sufficient_crit_period_max = max(distinct_years_sufficient_spawn_period_delist),
-              IR_category_GNIS_24 = max(IR_category),
+              IR_category_GNIS_26 = max(IR_category),
               Rationale_GNIS = str_c(Rationale,collapse =  " ~ " ) ) %>% 
-    mutate(IR_category_GNIS_24 = factor(IR_category_GNIS_24, levels=c("Unassessed",'3D',"3", "3B","3C", "2", "5", '4A', '4B', '4C'), ordered=TRUE)) |> 
-    mutate(recordID = paste0("2024-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code,"-", period )) |> 
+    mutate(IR_category_GNIS_26 = factor(IR_category_GNIS_26, levels=c("Unassessed",'3D',"3", "3B","3C", "2", "5", '4A', '4B', '4C'), ordered=TRUE)) |> 
+    mutate(recordID = paste0("2026-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code,"-", period )) |> 
     mutate(Delist_eligability = case_when(distinct_years_sufficient_crit_period_max >=3 ~ 1,
                                           TRUE ~ 0))
   
@@ -503,8 +503,8 @@ fun_temp_analysis <- function(df, write_excel = TRUE){
   
   
    # WS_GNIS_rollup_delist_spawn <- WS_GNIS_rollup_spawn |> 
-   #   mutate(Delist_eligability = case_when( prev_GNIS_category %in% c('5',  '4A') & IR_category_GNIS_24 == '2' & distinct_years_sufficient_crit_period_max >=3 ~ "Delist Eligible",
-   #                                          prev_GNIS_category %in% c('5',  '4A') & IR_category_GNIS_24 == '2' & distinct_years_sufficient_crit_period_max < 3 ~ 'Insuffcient data to delist')) |> 
+   #   mutate(Delist_eligability = case_when( prev_GNIS_category %in% c('5',  '4A') & IR_category_GNIS_26 == '2' & distinct_years_sufficient_crit_period_max >=3 ~ "Delist Eligible",
+   #                                          prev_GNIS_category %in% c('5',  '4A') & IR_category_GNIS_26 == '2' & distinct_years_sufficient_crit_period_max < 3 ~ 'Insuffcient data to delist')) |> 
    #   mutate(final_GNIS_cat = case_when(Delist_eligability == "Delist Eligible" ~ '2',
    #                                     TRUE ~ final_GNIS_cat),
    #          Rationale_GNIS = case_when(Delist_eligability %in% c("Delist Eligible",'Insuffcient data to delist')  ~paste0(Delist_eligability, "- ", Rationale_GNIS),
@@ -707,7 +707,7 @@ fun_temp_analysis <- function(df, write_excel = TRUE){
   AU_display_WS_yearround <- WS_AU_rollup_joined |> 
     rename(prev_category = prev_AU_category,
            prev_rationale = prev_AU_rationale,
-           final_AU_cat = IR_category_AU_24,
+           final_AU_cat = IR_category_AU_26,
            Rationale = Rationale_AU) |> 
     select(AU_ID, Pollu_ID, wqstd_code, period, prev_category, prev_rationale,
            final_AU_cat, Rationale, stations, recordID, status_change, Year_listed,  year_last_assessed)
@@ -721,7 +721,7 @@ fun_temp_analysis <- function(df, write_excel = TRUE){
   AU_display_WS_spawn <- WS_AU_rollup_joined_spawn |> 
     rename(prev_category = prev_AU_category,
            prev_rationale = prev_AU_rationale,
-           final_AU_cat = IR_category_AU_24,
+           final_AU_cat = IR_category_AU_26,
            Rationale = Rationale_AU) |> 
     select(AU_ID, Pollu_ID, wqstd_code, period, prev_category, prev_rationale,
            final_AU_cat, Rationale, stations, recordID, status_change, Year_listed,  year_last_assessed)
@@ -735,11 +735,13 @@ fun_temp_analysis <- function(df, write_excel = TRUE){
      relocate(prev_category, .after = year_last_assessed) |> 
      relocate(prev_rationale, .after = prev_category) |> 
      arrange(AU_ID) |> 
-     mutate(year_last_assessed = case_when(status_change != 'No change in status- No new assessment' ~ "2024",
+     mutate(year_last_assessed = case_when(status_change != 'No change in status- No new assessment' ~ "2026",
                                            TRUE ~ year_last_assessed)) |> 
-     mutate(Year_listed = case_when(final_AU_cat %in% c("5", '4A') & is.na(Year_listed) ~ '2024',
+     mutate(Year_listed = case_when(final_AU_cat %in% c("5", '4A') & is.na(Year_listed) ~ '2026',
                                     TRUE ~  Year_listed)) |> 
      mutate(Char_Name = 'Temperature, water') |> 
+     mutate(status_change = case_when(prev_category == '5' & final_AU_cat == '4A' ~ "Delist. 5 to 4A",
+                                      TRUE ~ status_change )) |> 
      relocate(Char_Name,.after = AU_ID) 
   
 
@@ -778,6 +780,8 @@ WS_GNIS_cat <- bind_rows(WS_GNIS_rollup_delist, WS_GNIS_rollup_delist_spawn) |>
     relocate(prev_GNIS_category, .after = Rationale_GNIS) |> 
     relocate(prev_GNIS_rationale, .after = prev_GNIS_category)   |> 
     mutate(Char_Name = 'Temperature, water') |> 
+    mutate(status_change = case_when(prev_GNIS_category == '5' & final_GNIS_cat == '4A' ~ "Delist. 5 to 4A",
+                                     TRUE ~ status_change)) |> 
     relocate(Char_Name,.after = AU_GNIS_Name) 
    
     

@@ -4,7 +4,7 @@ Bacteria_data <- function(database) {
   
   
   require(tidyverse)
-  require(RODBC)
+  # require(RODBC)
   require(odeqIRtools)
 
   
@@ -41,10 +41,10 @@ Bacteria_data <- function(database) {
   Results_import %>% map_if(is.factor, as.character) %>% as_tibble -> Results_import 
   Results_import <- Results_import |> 
     mutate(Result_UID = as.character(Result_UID)) |> 
-    mutate(SampleStartDate = lubridate::ymd(SampleStartDate))
+    mutate(SampleStartDate = lubridate::ymd(SampleStartDate))  
   
-  # Results_import <- Results_import |> 
-  #   mutate(Result_UID = Result_UID)
+  Results_import <- Results_import |>
+    mutate(Result_UID = as.numeric(Result_UID))
   
   Results_import <- odeqIRtools::data_aggregation(Results_import)
   

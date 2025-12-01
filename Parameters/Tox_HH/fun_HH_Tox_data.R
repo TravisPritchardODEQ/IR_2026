@@ -1,5 +1,5 @@
-library(rgdal)
-library(RODBC)
+#library(rgdal)
+#library(RODBC)
 library(tidyverse)
 library(odeqIRtools)
 library(DBI)
@@ -24,46 +24,43 @@ database <- "IR_Dev"
   #ALTox_data <- function(database) {
   print("Fetch AL Toxic data from IR database")
   
-  #connect to IR database view as a general user
-  # import bacteria data
-  con <- DBI::dbConnect(odbc::odbc(), "IR_Dev")
+#   #connect to IR database view as a general user
+#   # import bacteria data
+#   con <- DBI::dbConnect(odbc::odbc(), "IR_Dev")
+#   
+#   results_usgs_qry <-"SELECT dbo.IR_24_missingUSGSdata.OrganizationID, dbo.IR_24_missingUSGSdata.MLocID, dbo.IR_24_missingUSGSdata.StationDes, dbo.IR_24_missingUSGSdata.GNIS_Name as AU_GNIS_Name, dbo.IR_24_missingUSGSdata.GNIS_Name, dbo.IR_24_missingUSGSdata.MonLocType, dbo.IR_24_missingUSGSdata.AU_ID, dbo.IR_24_missingUSGSdata.ben_use_code, 
+#                   dbo.IR_24_missingUSGSdata.OWRD_Basin, dbo.IR_24_missingUSGSdata.wqstd_code, dbo.IR_24_missingUSGSdata.WaterBodyCode, dbo.IR_24_missingUSGSdata.WaterTypeCode, dbo.Crit_ToxHH.Pollutant, dbo.Crit_ToxHH.WaterOrganism, dbo.Crit_ToxHH.Organism, 
+#                   dbo.Crit_ToxHH.Organism_SW, dbo.Crit_ToxHH.Fraction AS Crit_Fraction, dbo.IR_24_missingUSGSdata.Pollu_ID, dbo.IR_24_missingUSGSdata.SampleMedia, dbo.IR_24_missingUSGSdata.SampleSubmedia, dbo.IR_24_missingUSGSdata.SampleStartDate, dbo.IR_24_missingUSGSdata.SampleStartTime, 
+#                   dbo.IR_24_missingUSGSdata.SampleStartTZ, dbo.IR_24_missingUSGSdata.Char_Name, dbo.IR_24_missingUSGSdata.chr_uid, dbo.IR_24_missingUSGSdata.Char_Speciation, dbo.IR_24_missingUSGSdata.Sample_Fraction, dbo.IR_24_missingUSGSdata.CASNumber, dbo.IR_24_missingUSGSdata.Result_UID, dbo.IR_24_missingUSGSdata.Result_status, 
+#                   dbo.IR_24_missingUSGSdata.Result_Numeric, dbo.IR_24_missingUSGSdata.Result_Unit, dbo.IR_24_missingUSGSdata.Result_Type, dbo.IR_24_missingUSGSdata.IRResultNWQSunit, dbo.IR_24_missingUSGSdata.Result_Operator, dbo.IR_24_missingUSGSdata.IRWQSUnitName, dbo.IR_24_missingUSGSdata.act_depth_height, 
+#                   dbo.IR_24_missingUSGSdata.ActDepthUnit, dbo.IR_24_missingUSGSdata.Statistical_Base, dbo.IR_24_missingUSGSdata.Time_Basis, dbo.IR_24_missingUSGSdata.lab_Comments, dbo.IR_24_missingUSGSdata.General_Comments, dbo.IR_24_missingUSGSdata.Analytical_method, dbo.IR_24_missingUSGSdata.QualifierAbbr, 
+#                   dbo.IR_24_missingUSGSdata.QualifierTxt
+# FROM     dbo.Crit_ToxHH INNER JOIN
+#                   dbo.IR_24_missingUSGSdata ON dbo.Crit_ToxHH.Pollu_ID = dbo.IR_24_missingUSGSdata.Pollu_ID
+# WHERE  (dbo.IR_24_missingUSGSdata.wqstd_code = 16) AND (dbo.IR_24_missingUSGSdata.AU_ID IS NOT NULL)" 
+#   
+#   results_usgs <- dbGetQuery(con,results_usgs_qry)
+#   
+#   results_usgs <- results_usgs |> 
+#     mutate(act_depth_height = as.numeric(act_depth_height))
+#   
+#   new_aus <- unique(results_usgs$AU_ID)  
+#   
+#   # connect to IR database view as a general user
+#   # import TOXHH data
+#   dbDisconnect(con)
+#   
   
-  results_usgs_qry <-"SELECT dbo.IR_24_missingUSGSdata.OrganizationID, dbo.IR_24_missingUSGSdata.MLocID, dbo.IR_24_missingUSGSdata.StationDes, dbo.IR_24_missingUSGSdata.GNIS_Name as AU_GNIS_Name, dbo.IR_24_missingUSGSdata.GNIS_Name, dbo.IR_24_missingUSGSdata.MonLocType, dbo.IR_24_missingUSGSdata.AU_ID, dbo.IR_24_missingUSGSdata.ben_use_code, 
-                  dbo.IR_24_missingUSGSdata.OWRD_Basin, dbo.IR_24_missingUSGSdata.wqstd_code, dbo.IR_24_missingUSGSdata.WaterBodyCode, dbo.IR_24_missingUSGSdata.WaterTypeCode, dbo.Crit_ToxHH.Pollutant, dbo.Crit_ToxHH.WaterOrganism, dbo.Crit_ToxHH.Organism, 
-                  dbo.Crit_ToxHH.Organism_SW, dbo.Crit_ToxHH.Fraction AS Crit_Fraction, dbo.IR_24_missingUSGSdata.Pollu_ID, dbo.IR_24_missingUSGSdata.SampleMedia, dbo.IR_24_missingUSGSdata.SampleSubmedia, dbo.IR_24_missingUSGSdata.SampleStartDate, dbo.IR_24_missingUSGSdata.SampleStartTime, 
-                  dbo.IR_24_missingUSGSdata.SampleStartTZ, dbo.IR_24_missingUSGSdata.Char_Name, dbo.IR_24_missingUSGSdata.chr_uid, dbo.IR_24_missingUSGSdata.Char_Speciation, dbo.IR_24_missingUSGSdata.Sample_Fraction, dbo.IR_24_missingUSGSdata.CASNumber, dbo.IR_24_missingUSGSdata.Result_UID, dbo.IR_24_missingUSGSdata.Result_status, 
-                  dbo.IR_24_missingUSGSdata.Result_Numeric, dbo.IR_24_missingUSGSdata.Result_Unit, dbo.IR_24_missingUSGSdata.Result_Type, dbo.IR_24_missingUSGSdata.IRResultNWQSunit, dbo.IR_24_missingUSGSdata.Result_Operator, dbo.IR_24_missingUSGSdata.IRWQSUnitName, dbo.IR_24_missingUSGSdata.act_depth_height, 
-                  dbo.IR_24_missingUSGSdata.ActDepthUnit, dbo.IR_24_missingUSGSdata.Statistical_Base, dbo.IR_24_missingUSGSdata.Time_Basis, dbo.IR_24_missingUSGSdata.lab_Comments, dbo.IR_24_missingUSGSdata.General_Comments, dbo.IR_24_missingUSGSdata.Analytical_method, dbo.IR_24_missingUSGSdata.QualifierAbbr, 
-                  dbo.IR_24_missingUSGSdata.QualifierTxt
-FROM     dbo.Crit_ToxHH INNER JOIN
-                  dbo.IR_24_missingUSGSdata ON dbo.Crit_ToxHH.Pollu_ID = dbo.IR_24_missingUSGSdata.Pollu_ID
-WHERE  (dbo.IR_24_missingUSGSdata.wqstd_code = 16) AND (dbo.IR_24_missingUSGSdata.AU_ID IS NOT NULL)" 
-  
-  results_usgs <- dbGetQuery(con,results_usgs_qry)
-  
-  results_usgs <- results_usgs |> 
-    mutate(act_depth_height = as.numeric(act_depth_height))
-  
-  new_aus <- unique(results_usgs$AU_ID)  
-  
-  # connect to IR database view as a general user
-  # import TOXHH data
-  dbDisconnect(con)
-  
-  
-  IR.sql <-   odbcConnect(database)
+  IR.sql <-   DBI::dbConnect(odbc::odbc(), "IR_Dev")
   
   
   # Get data from IR database where wqstd_code = 12, ResStatusName = Final, 
   # Join with Crit_Temp to get temperature Criteria and spawn ?
-  Results_importdb <-    sqlFetch(IR.sql, "dbo.VW_ToxHH") 
+  Results_import <-    tbl(IR.sql, "VW_ToxHH") |> 
+    collect()
   
   
-  Results_import <- Results_importdb |> 
-    #filter(AU_ID %in% new_aus) |> 
-    bind_rows(results_usgs)
-  
-  odbcClose(IR.sql)
+  dbDisconnect(IR.sql)
   
   
   print(paste("Fetched", nrow(Results_import), "results from", length(unique(Results_import$MLocID)), "monitoring locations" ))

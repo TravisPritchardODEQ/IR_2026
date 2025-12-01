@@ -5,46 +5,48 @@ library(DBI)
 
 # Data aggregation ------------------------------------------------------------------------------------------------
 
-options(scipen = 999999)
+options(scipen = 9999)
 
 # Connect to the IR database
 IR.sql <-   DBI::dbConnect(odbc::odbc(), "IR_Dev")
+# 
+# # Function to import custom input raw script
+# # This script queries input raw, but includes all the paramter view conditions. 
+# # This allows us to check duplciates only on data used in the parameter assessments
+# 
+# getSQL <- function(filepath){
+#   con = file(filepath, "r")
+#   sql.string <- ""
+#   
+#   while (TRUE){
+#     line <- readLines(con, n = 1)
+#     
+#     if ( length(line) == 0 ){
+#       break
+#     }
+#     
+#     line <- gsub("\\t", " ", line)
+#     
+#     if(grepl("--",line) == TRUE){
+#       line <- paste(sub("--","/*",line),"*/")
+#     }
+#     
+#     sql.string <- paste(sql.string, line)
+#   }
+#   
+#   close(con)
+#   return(sql.string)
+# }
+# 
+# 
+# 
+# IR_Res_qry <- getSQL("Validation/InputRaw limited to data views.sql")
+# 
+# 
+# IR_res_db <- DBI::dbGetQuery(IR.sql, glue::glue_sql(IR_Res_qry, .con = IR.sql))
 
-# Function to import custom input raw script
-# This script queries input raw, but includes all the paramter view conditions. 
-# This allows us to check duplciates only on data used in the parameter assessments
-
-getSQL <- function(filepath){
-  con = file(filepath, "r")
-  sql.string <- ""
-  
-  while (TRUE){
-    line <- readLines(con, n = 1)
-    
-    if ( length(line) == 0 ){
-      break
-    }
-    
-    line <- gsub("\\t", " ", line)
-    
-    if(grepl("--",line) == TRUE){
-      line <- paste(sub("--","/*",line),"*/")
-    }
-    
-    sql.string <- paste(sql.string, line)
-  }
-  
-  close(con)
-  return(sql.string)
-}
-
-
-
-IR_Res_qry <- getSQL("Validation/InputRaw limited to data views.sql")
-
-
-IR_res_db <- DBI::dbGetQuery(IR.sql, glue::glue_sql(IR_Res_qry, .con = IR.sql))
-
+IR_res_db <- tbl(IR.sql, "InputRaw") |> 
+  collect()
 
 # Read in identified exclusions -----------------------------------------------------------------------------------
 
@@ -163,17 +165,12 @@ aggregate_data <- agg_diff_orgs %>%
   ungroup() %>%
   group_by(group_num) %>%
   mutate(H_concentration = ifelse(Char_Name == 'pH', 10^(-IRResultNWQSunit), NA )) %>% 
-  mutate(mean_result = ifelse(Char_Name == 'pH', round(-log10(median(H_concentration)), 2), median(IRResultNWQSunit))) %>%
+  mutate(mean_result = ifelse(Char_Name == 'pH', round(-log10(mean(H_concentration)), 2), mean(IRResultNWQSunit))) %>%
   mutate(unit = IRWQSUnitName) %>%
   select(Result_UID, group_num, Char_Name,wqstd_code, mean_result, unit)
 
-test <- aggregate_data %>%
-  filter(Result_UID == 29100763)
-group_by(Result_UID) %>%
-  summarise(n = n()) %>%
-  filter(n > 1) |> 
 
-save(aggregate_data, file = "Validation/2024_aggregate_data.Rdata")
+save(aggregate_data, file = "Validation/2026_aggregate_data.Rdata")
 
 
 

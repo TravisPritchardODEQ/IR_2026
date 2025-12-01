@@ -7,7 +7,8 @@ source("Parameters/Bacteria/fun_shell_harvest.R")
 library(tidyverse)
 library(odeqIRtools)
 
-Bacteria_results <- Bacteria_data("IR_Dev")
+Bacteria_results <- Bacteria_data("IR_Dev") |> 
+  filter(!is.na(Result_Numeric))
 
 
 freshwater_bacteria <- fresh_contact_rec(Bacteria_results, write_excel = TRUE)

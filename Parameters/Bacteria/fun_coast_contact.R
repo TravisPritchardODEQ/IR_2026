@@ -21,8 +21,9 @@ coast_contact <- function(df, type = "coast", write_excel = TRUE, database = 'IR
   chars <- tbl(con, "LU_Pollutant") |> 
     select(Pollu_ID, `Pollutant_DEQ WQS`) |> 
     rename(Char_Name = `Pollutant_DEQ WQS`) |>
-    mutate(Pollu_ID = as.character(Pollu_ID)) |> 
-    collect()
+    #mutate(Pollu_ID = as.character(Pollu_ID)) |> 
+    collect() |> 
+    mutate(Pollu_ID = as.character(Pollu_ID))
   
   DBI::dbDisconnect(con)
 
@@ -279,13 +280,13 @@ WS_GNIS_rollup <- coast_AU_summary_WS0 %>%
   ungroup() %>%
   group_by(AU_ID, AU_GNIS_Name, Char_Name, Pollu_ID, wqstd_code, period) %>%
   summarise( stations =  stringr::str_c(unique(stations), collapse = "; "),
-             IR_category_GNIS_24 = max(IR_category),
+             IR_category_GNIS_26 = max(IR_category),
             Rationale_GNIS = str_c(Rationale,collapse =  " ~ " ),
             Delist_eligability = max(Delist_eligability)) %>% 
-  mutate(Delist_eligability = case_when(Delist_eligability == 1 & IR_category_GNIS_24 == '2'~ 1,
+  mutate(Delist_eligability = case_when(Delist_eligability == 1 & IR_category_GNIS_26 == '2'~ 1,
                                         TRUE ~ 0)) |> 
-  mutate(IR_category_GNIS_24 = factor(IR_category_GNIS_24, levels=c('Unassessed', "3", "3B", "2", "5" ), ordered=TRUE)) |> 
-  mutate(recordID = paste0("2024-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code,"-", period )) |> 
+  mutate(IR_category_GNIS_26 = factor(IR_category_GNIS_26, levels=c('Unassessed', "3", "3B", "2", "5" ), ordered=TRUE)) |> 
+  mutate(recordID = paste0("2026-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code,"-", period )) |> 
   ungroup() |> 
   select(-Char_Name) 
 
@@ -324,7 +325,7 @@ AU_display_other <- coast_AU_summary_no_WS_delist |>
 AU_display_ws <- WS_AU_rollup_joined |>
   rename(prev_category = prev_AU_category,
          prev_rationale = prev_AU_rationale,
-         final_AU_cat = IR_category_AU_24,
+         final_AU_cat = IR_category_AU_26,
          Rationale = Rationale_AU)
 
 # 
@@ -338,9 +339,9 @@ AU_display <-  bind_rows(AU_display_other,  AU_display_ws) |>
   join_AU_info() |> 
   relocate(prev_category, .after = year_last_assessed) |> 
   relocate(prev_rationale, .after = prev_category) |> 
-  mutate(year_last_assessed = case_when(status_change != 'No change in status- No new assessment' ~ "2024",
+  mutate(year_last_assessed = case_when(status_change != 'No change in status- No new assessment' ~ "2026",
                                         TRUE ~ year_last_assessed)) |> 
-  mutate(Year_listed = case_when(final_AU_cat %in% c("5", '4A') & is.na(Year_listed) ~ '2024',
+  mutate(Year_listed = case_when(final_AU_cat %in% c("5", '4A') & is.na(Year_listed) ~ '2026',
                                  TRUE ~  Year_listed)) 
 
 

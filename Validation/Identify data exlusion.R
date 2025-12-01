@@ -18,18 +18,57 @@ IR.sql <-   DBI::dbConnect(odbc::odbc(), "IR_Dev")
 
 
 
+
+
+# Clean up unused_results_table_remove dups -------------------------------
+
+unused_results_dup_remove <- tbl(IR.sql, 'Unused_Results') |> 
+  collect() |> 
+  distinct()
+
+
+DBI::dbWriteTable(IR.sql, "Unused_Results", unused_results_dup_remove, overwrite = TRUE)
+
+
+
+
+# 2026- round 2 of data exlcusions ----------------------------------------
+
+exclusions_import_path <- "C:/Users/tpritch/OneDrive - Oregon/DEQ - Integrated Report - IR_2026/Data Pull/Result_UIDs_Exclude_2.xlsx"
+
+data_to_exclude <- read.xlsx(exclusions_import_path, 
+                             sheet = 'Data to exclude')
+
+data_to_exclude_portal <- read.xlsx(exclusions_import_path, 
+                                   sheet = 'WQX and USGS data to exclude')
+
+data_to_add <- bind_rows(data_to_exclude, data_to_exclude_portal) |> 
+  distinct() |> 
+  transmute(Result_UID = Result.UID,
+            Char_Name = Characteristic,
+            Data_Review_Comment = Reason.for.exclusion)
+  
+
+
+DBI::dbWriteTable(IR.sql, "Unused_Results", data_to_add, append = TRUE)
+
+
 # Add in lab identified data exclusions -----------------------------------
 
 
 
-unused_data_lab_review <- tbl(con, 'ResultsRawWater') |> 
+unused_data_lab_review <- tbl(IR.sql, 'ResultsRawWater') |> 
+  collect() |> 
   filter(str_detect(General_Comments, 'DCC:WQX') | str_detect(General_Comments, 'OCC:WQX')) |> 
   mutate(Data_Review_Comment = case_when(str_detect(General_Comments, 'DCC:WQX')  ~ "Data Review indicates WQX duplicate issue",
                                          str_detect(General_Comments, 'OCC:WQX') ~ "Data Review indicates WQX outlier issue")) |> 
-  select(Result_UID, Char_Name, Data_Review_Comment) |> 
-  collect() 
+  select(Result_UID, Char_Name, Data_Review_Comment) 
 
 
+
+# Add in 2026 identified exclusions from the lab --------------------------
+
+unused_data_lab_review
 
 
 # Function to import custom input raw script

@@ -1,5 +1,4 @@
-require(rgdal)
-require(RODBC)
+
 library(tidyverse)
 library(odeqIRtools)
 
@@ -10,17 +9,20 @@ turb_data <- function(database) {
   print("Fetch Turbidity  data from IR database")
   #connect to IR database view as a general user
   # import Temperature data
-  IR.sql <-   odbcConnect(database)
+  IR.sql <-  DBI::dbConnect(odbc::odbc(), database)
   
   
   # Get data from IR database where wqstd_code = 12, ResStatusName = Final, 
   # Join with Crit_Temp to get temperature Criteria and spawn ?
-  Results_import <-    sqlFetch(IR.sql, "VW_Turbidity") 
+  Results_import <-    tbl(IR.sql, "VW_Turbidity") |> 
+    collect()
   
   
-  odbcClose(IR.sql)
+  DBI::dbDisconnect(IR.sql)
   
-  
+  Results_import <- Results_import |> 
+    mutate(Result_UID = as.character(Result_UID)) |> 
+    mutate(SampleStartDate = lubridate::ymd(SampleStartDate))
   
   print(paste("Fetched", nrow(Results_import), "results from", length(unique(Results_import$MLocID)), "monitoring locations" ))
   

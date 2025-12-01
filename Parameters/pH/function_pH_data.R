@@ -2,7 +2,7 @@ cont_ph_raw <- function(database) {
   
   #database <- "IR_Dev"
   require(tidyverse)
-  require(RODBC)
+ # require(RODBC)
   require(odeqIRtools)
   
   print("Fetch continuous pH data from IR database")
@@ -36,21 +36,23 @@ cont_ph_raw <- function(database) {
   
   
   database = "IR_Dev"
-  IR.sql <-   odbcConnect(database)
+  IR.sql <-  DBI::dbConnect(odbc::odbc(), database)
 
-
-  Results_import_cont <-    sqlFetch(IR.sql, "VW_pHCont") %>%
-    dplyr::filter(!is.na(Result_Numeric))
+print("fetch continuous")
+  Results_import_cont <-    tbl(IR.sql, "VW_pHCont") %>%
+    dplyr::filter(!is.na(Result_Numeric)) |> 
+    collect()
   
-  
-  Results_import_db <-    sqlFetch(IR.sql, "VW_pH")%>%
-    dplyr::filter(!is.na(Result_Numeric))
+  print("fetch grab")
+  Results_import_db <- tbl(IR.sql, "VW_pH")  %>%
+    dplyr::filter(!is.na(Result_Numeric)) |> 
+    collect()
   
   
   Results_import_grab <- Results_import_db 
   
   
-  odbcClose(IR.sql)
+  DBI::dbDisconnect(IR.sql)
   
   print(paste("Fetched", nrow(Results_import_cont), "continuous results from", length(unique(Results_import_cont$MLocID)), "monitoring locations" ))
   print(paste("Fetched", nrow(Results_import_grab), "grab results from", length(unique(Results_import_grab$MLocID)), "monitoring locations" ))

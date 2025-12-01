@@ -41,6 +41,9 @@ fun_Tox_HH_analysis <-function(df, write_excel = TRUE, database = "IR_Dev"){
     # Change the Char_Name to Endosulfan and the Result_cen column to the summed value
     mutate(Char_Name = "Chlordane",
            Result_cen = Summed_values) %>%
+    mutate(Result_cen = case_when(Result_cen == 0 ~ 0.5*crit,
+                                  TRUE ~ Result_cen
+                                  )) |> 
     # get rid of extra columns that were created
     select(-Summed_values,  -summing_censored_value, -has_chlordane,is_chlordane)
   
@@ -89,7 +92,10 @@ fun_Tox_HH_analysis <-function(df, write_excel = TRUE, database = "IR_Dev"){
            Result_cen = Summed_values) %>%
     # get rid of extra columns that were created
     select(-Summed_values,  -Has_aroclor,  -is_aroclor, -summed_censored_value) %>%
-    mutate(IR_note = as.character(IR_note))
+    mutate(IR_note = as.character(IR_note)) |> 
+    mutate(Result_cen = case_when(Result_cen == 0 ~ 0.5*crit,
+                                  TRUE ~ Result_cen
+    )) 
 
 
 # Arsenic ---------------------------------------------------------------------------------------------------------
@@ -109,7 +115,10 @@ fun_Tox_HH_analysis <-function(df, write_excel = TRUE, database = "IR_Dev"){
       #If we don't have inorganic, temporarily set the criteria fraction to total so the assessment code works properly
       #we will set this back to 'inorganic' later
     mutate(Crit_Fraction = ifelse(is_inorganic == 0 , "Total", Crit_Fraction)) %>%
-    select(-is_inorganic, -has_inorganic) 
+    select(-is_inorganic, -has_inorganic) |> 
+    mutate(Result_cen = case_when(Result_cen == 0 ~ 0.5*crit,
+                                  TRUE ~ Result_cen
+    )) 
   
   
   # Put summed data together
@@ -130,6 +139,7 @@ fun_Tox_HH_analysis <-function(df, write_excel = TRUE, database = "IR_Dev"){
   tox_HH_data <- results_analysis %>%
     # Set null crit_fraction to "Total"
     mutate(Crit_Fraction = ifelse(is.na(Crit_Fraction), "Total", Crit_Fraction )) %>%
+    mutate(Crit_Fraction = ifelse(Pollutant == "Arsenic", "Total", Crit_Fraction )) %>%
     # Create column for simplfied version of sample fraction
     # THese distinctions came from Sara Krepps
     mutate(Simplified_sample_fraction = case_when(Sample_Fraction %in% c("Total", "Extractable",
@@ -221,7 +231,7 @@ fun_Tox_HH_analysis <-function(df, write_excel = TRUE, database = "IR_Dev"){
       mutate(IR_category = factor(IR_category, levels=c("3D", "3", "3B", "2", "5" ), ordered=TRUE)) %>%
       rename(Char_Name = Pollutant)|> 
       mutate(period = NA_character_) |> 
-      mutate(Delist_eligability = case_when(num_samples >= 18 & IR_category == '2'  ~ 1,
+      mutate(Delist_eligability = case_when( IR_category == '2'  ~ 1,
                                             TRUE ~ 0)) 
     
 
@@ -258,13 +268,13 @@ fun_Tox_HH_analysis <-function(df, write_excel = TRUE, database = "IR_Dev"){
     ungroup() %>%
     group_by(AU_ID, AU_GNIS_Name, Char_Name, Pollu_ID, wqstd_code, period) %>%
     summarise(stations =  stringr::str_c(unique(stations), collapse = "; "),
-              IR_category_GNIS_24 = max(IR_category),
+              IR_category_GNIS_26 = max(IR_category),
               Rationale_GNIS = str_c(Rationale,collapse =  " ~ " ),
               Delist_eligability = max(Delist_eligability)) %>% 
-    mutate(Delist_eligability = case_when(Delist_eligability == 1 & IR_category_GNIS_24 == '2'~ 1,
+    mutate(Delist_eligability = case_when(Delist_eligability == 1 & IR_category_GNIS_26 == '2'~ 1,
                                           TRUE ~ 0)) |> 
-    mutate(IR_category_GNIS_24 = factor(IR_category_GNIS_24, levels=c('Unassessed', '3D',"3", "3B","3C", "2", "5", '4A', '4B', '4C'), ordered=TRUE)) |> 
-    mutate(recordID = paste0("2024-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code,"-", period ))  
+    mutate(IR_category_GNIS_26 = factor(IR_category_GNIS_26, levels=c('Unassessed', '3D',"3", "3B","3C", "2", "5", '4A', '4B', '4C'), ordered=TRUE)) |> 
+    mutate(recordID = paste0("2026-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code,"-", period ))  
   
   WS_GNIS_rollup <- join_prev_assessments(WS_GNIS_rollup, AU_type = "WS") |> 
     select(-Char_Name) |> 
@@ -298,7 +308,7 @@ fun_Tox_HH_analysis <-function(df, write_excel = TRUE, database = "IR_Dev"){
     filter(AU_ID %in% aus)
   
   other_category_delist <-  assess_delist(other_category, type = "Other")  |> 
-    mutate(recordID = paste0("2024-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code,"-", period ))  
+    mutate(recordID = paste0("2026-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code,"-", period ))  
   
    
   
@@ -311,7 +321,7 @@ fun_Tox_HH_analysis <-function(df, write_excel = TRUE, database = "IR_Dev"){
   AU_display_ws <- WS_AU_rollup_joined |> 
     rename(prev_category = prev_AU_category,
            prev_rationale = prev_AU_rationale,
-           final_AU_cat = IR_category_AU_24,
+           final_AU_cat = IR_category_AU_26,
            Rationale = Rationale_AU)
   
   AU_display <- bind_rows(AU_display_other, AU_display_ws) |> 
@@ -321,9 +331,9 @@ fun_Tox_HH_analysis <-function(df, write_excel = TRUE, database = "IR_Dev"){
     join_AU_info() |> 
     relocate(prev_category, .after = year_last_assessed) |> 
     relocate(prev_rationale, .after = prev_category) |> 
-    mutate(year_last_assessed = case_when(status_change != 'No change in status- No new assessment' ~ "2024",
+    mutate(year_last_assessed = case_when(status_change != 'No change in status- No new assessment' ~ "2026",
                                           TRUE ~ year_last_assessed)) |> 
-    mutate(Year_listed = case_when(final_AU_cat %in% c("5", '4A') & is.na(Year_listed) ~ '2024',
+    mutate(Year_listed = case_when(final_AU_cat %in% c("5", '4A') & is.na(Year_listed) ~ '2026',
                                    TRUE ~ Year_listed)) |> 
     mutate(status_change = case_when(is.na(status_change) ~ paste(prev_category, "to", final_AU_cat),
                                      TRUE ~  status_change))

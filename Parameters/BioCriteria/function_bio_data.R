@@ -3,7 +3,6 @@ bio_data <- function(database) {
   
   
   require(tidyverse)
-  require(RODBC)
   require(odeqIRtools)
   
   print("Fetch bio indexes from IR database")
@@ -17,6 +16,7 @@ bio_data <- function(database) {
   # 
   
   Results_import <- tbl(IR.sql, 'VW_BioCriteria') |> 
+    filter(Sample_Date >= '1998-01-01') |> 
     collect()
   
   DBI::dbDisconnect(IR.sql)

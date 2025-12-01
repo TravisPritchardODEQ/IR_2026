@@ -14,7 +14,7 @@ chl_assessment <- function(df, write_excel = TRUE, database = 'IR_Dev'){
   library(openxlsx)
   library(odeqIRtools)
 
-  aus <- unique(df$AU_ID)
+  #aus <- unique(df$AU_ID)
 
 # Char rename -----------------------------------------------------------------------------------------------------
   con <- DBI::dbConnect(odbc::odbc(), database)
@@ -22,8 +22,8 @@ chl_assessment <- function(df, write_excel = TRUE, database = 'IR_Dev'){
   chars <- tbl(con, "LU_Pollutant") |> 
     select(Pollu_ID, `Pollutant_DEQ WQS`) |> 
     rename(Char_Name = `Pollutant_DEQ WQS`) |>
-    mutate(Pollu_ID = as.character(Pollu_ID)) |> 
-    collect()
+    collect() |> 
+    mutate(Pollu_ID = as.character(Pollu_ID)) 
   
     DBI::dbDisconnect(con)
   # Watershed units -------------------------------------------------------------------------------------------------
@@ -118,7 +118,7 @@ WS_category <- WS_3mo %>%
          )) %>%
   mutate(IR_category = factor(IR_category, levels=c("3", "3B", "2", "5" ), ordered=TRUE)) |> 
   mutate(period = NA_character_) |> 
-  mutate(recordID = paste0("2024-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code )) |> 
+  mutate(recordID = paste0("2026-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code )) |> 
   mutate(Delist_eligability = case_when(num_monthly_avg >= 18 & num_monthly_excur <= binomial_delisting(num_monthly_avg, 'Conventionals') 
                                         & num_3mo_avg_calculated > 1 & num_excur_3mo_avg == 0  ~ 1,
                                         TRUE ~ 0)) 
@@ -131,18 +131,17 @@ WS_GNIS_rollup <- WS_category %>%
   ungroup() %>%
   group_by(AU_ID, AU_GNIS_Name, Char_Name, Pollu_ID, wqstd_code, period) %>%
   summarise(stations =  stringr::str_c(unique(MLocID), collapse = "; "),
-            IR_category_GNIS_24 = max(IR_category),
+            IR_category_GNIS_26 = max(IR_category),
             Rationale_GNIS = str_c(Rationale,collapse =  " ~ " ),
             Delist_eligability = max(Delist_eligability)) %>% 
-  mutate(Delist_eligability = case_when(Delist_eligability == 1 & IR_category_GNIS_24 == '2'~ 1,
+  mutate(Delist_eligability = case_when(Delist_eligability == 1 & IR_category_GNIS_26 == '2'~ 1,
                                         TRUE ~ 0)) |> 
-  mutate(IR_category_GNIS_24 = factor(IR_category_GNIS_24, levels=c('Unassessed', "3", "3B", "2", "5" ), ordered=TRUE)) |> 
-  mutate(recordID = paste0("2024-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code,"-", period ))  |> 
+  mutate(IR_category_GNIS_26 = factor(IR_category_GNIS_26, levels=c('Unassessed', "3", "3B", "2", "5" ), ordered=TRUE)) |> 
+  mutate(recordID = paste0("2026-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code,"-", period ))  |> 
   ungroup() |> 
   select(-Char_Name)
 
-WS_GNIS_rollup <- join_prev_assessments(WS_GNIS_rollup, AU_type = "WS")|> 
-  filter(AU_ID %in% aus)
+WS_GNIS_rollup <- join_prev_assessments(WS_GNIS_rollup, AU_type = "WS")
 
 
 ### Delist process --------------------------------------------------------------------------------------------------
@@ -258,14 +257,13 @@ other_category <- other_3mo %>%
   )) %>%
   mutate(IR_category = factor(IR_category, levels=c("3", "3B", "2", "5" ), ordered=TRUE)) |> 
   mutate(period = NA_character_) |> 
-  mutate(recordID = paste0("2024-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code )) |> 
+  mutate(recordID = paste0("2026-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code )) |> 
   mutate(Delist_eligability = case_when(num_monthly_avg >= 18 & num_monthly_excur <= binomial_delisting(num_monthly_avg, 'Conventionals') 
                                         & num_3mo_avg_calculated > 1 & num_excur_3mo_avg == 0  ~ 1,
                                         TRUE ~ 0)) 
 
 other_category <- join_prev_assessments(other_category, AU_type = 'Other') |> 
-  select(-Char_Name) |> 
-  filter(AU_ID %in% aus)
+  select(-Char_Name)
 
 other_category_delist <-  assess_delist(other_category, type = "Other")|> 
   left_join(chars, by = join_by(Pollu_ID)) |> 
@@ -282,7 +280,7 @@ AU_display_other <- other_category_delist |>
 AU_display_ws <- WS_AU_rollup_joined |> 
   rename(prev_category = prev_AU_category,
          prev_rationale = prev_AU_rationale,
-         final_AU_cat = IR_category_AU_24,
+         final_AU_cat = IR_category_AU_26,
          Rationale = Rationale_AU)
 
 
@@ -293,9 +291,9 @@ AU_display <- bind_rows(AU_display_other, AU_display_ws) |>
   join_AU_info() |> 
   relocate(prev_category, .after = year_last_assessed) |> 
   relocate(prev_rationale, .after = prev_category) |> 
-  mutate(year_last_assessed = case_when(status_change != 'No change in status- No new assessment' ~ "2024",
+  mutate(year_last_assessed = case_when(status_change != 'No change in status- No new assessment' ~ "2026",
                                         TRUE ~ year_last_assessed)) |> 
-  mutate(Year_listed = case_when(final_AU_cat %in% c("5", '4A') & is.na(Year_listed) ~ '2024',
+  mutate(Year_listed = case_when(final_AU_cat %in% c("5", '4A') & is.na(Year_listed) ~ '2026',
                                  TRUE ~  Year_listed)) 
   
 

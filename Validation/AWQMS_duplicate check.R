@@ -23,36 +23,36 @@ IR.sql <-   DBI::dbConnect(odbc::odbc(), "IR_Dev")
 # # This script queries input raw, but includes all the paramter view conditions. 
 # # This allows us to check duplciates only on data used in the parameter assessments
 # 
-getSQL <- function(filepath){
-  con = file(filepath, "r")
-  sql.string <- ""
-
-  while (TRUE){
-    line <- readLines(con, n = 1)
-
-    if ( length(line) == 0 ){
-      break
-    }
-
-    line <- gsub("\\t", " ", line)
-
-    if(grepl("--",line) == TRUE){
-      line <- paste(sub("--","/*",line),"*/")
-    }
-
-    sql.string <- paste(sql.string, line)
-  }
-
-  close(con)
-  return(sql.string)
-}
-
-
-
-IR_Res_qry <- getSQL("Validation/InputRaw limited to data views.sql")
-
-
-IR_res_db <- DBI::dbGetQuery(IR.sql, glue_sql(IR_Res_qry, .con = IR.sql))
+# getSQL <- function(filepath){
+#   con = file(filepath, "r")
+#   sql.string <- ""
+# 
+#   while (TRUE){
+#     line <- readLines(con, n = 1)
+# 
+#     if ( length(line) == 0 ){
+#       break
+#     }
+# 
+#     line <- gsub("\\t", " ", line)
+# 
+#     if(grepl("--",line) == TRUE){
+#       line <- paste(sub("--","/*",line),"*/")
+#     }
+# 
+#     sql.string <- paste(sql.string, line)
+#   }
+# 
+#   close(con)
+#   return(sql.string)
+# }
+# 
+# 
+# 
+# IR_Res_qry <- getSQL("Validation/InputRaw limited to data views.sql")
+# 
+# 
+# IR_res_db <- DBI::dbGetQuery(IR.sql, glue_sql(IR_Res_qry, .con = IR.sql))
 IR_res_db <- dbReadTable(IR.sql, 'ResultsRawWater')
 
 

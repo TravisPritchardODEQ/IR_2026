@@ -57,7 +57,7 @@ unused_data <- tbl(con, 'Unused_Results')  |>
 ,[IRWQSUnitName]
 ,[Result_Depth]
 FROM [IntegratedReport].[dbo].[ResultsRawWater]
-WHERE chr_uid in ('2849', '1648', '727', '1244', 1802, 1709, 1827, 773, 544, 100331, 1097, 1099, 2174, 2982) 
+WHERE chr_uid in ('2849', '1648', '727', '1244', 1802, 1709, 1827, 773, 544, 100331, 1097, 1099, 2174, 2982, 103437) 
       AND (Statistical_Base IS NULL)
       AND MLocID in ({mlocs*})", .con = con)
   
@@ -71,7 +71,7 @@ WHERE chr_uid in ('2849', '1648', '727', '1244', 1802, 1709, 1827, 773, 544, 100
   
   spread <- Results_ancillary %>%
     filter(!Result_UID %in% unused_data) |> 
-    mutate(Char_Name = ifelse(chr_uid %in% c(544, 100331), 'Alkalinity', 
+    mutate(Char_Name = ifelse(chr_uid %in% c(544, 100331, 103437), 'Alkalinity', 
                               ifelse(chr_uid %in% c(1097, 1099), 'Hardness', 
                                      ifelse(chr_uid == 2174 & Sample_Fraction == "Total" , 'TOC', 
                                             ifelse(chr_uid == 2174 & Sample_Fraction == "Dissolved", 'DOC', Char_Name ))))) %>%
