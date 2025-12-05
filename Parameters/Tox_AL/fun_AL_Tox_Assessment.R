@@ -314,7 +314,7 @@ Chromium_data <- df  %>%
                                                                                    num_samples, " total samples"),
                                  TRUE ~ "ERROR")) %>%
     mutate(IR_category = factor(IR_category, levels=c("3D", "3", "3B", "2", "5" ), ordered=TRUE)) |> 
-    mutate(recordID = paste0("2024-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code)) |> 
+    mutate(recordID = paste0("2026-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code)) |> 
     mutate(period = NA_character_) |> 
     mutate(Delist_eligability = case_when(num_samples >= 18 & num_excursions_all <= binomial_delisting(num_samples, 'Toxics')  ~ 1,
                                           TRUE ~ 0)) 
@@ -351,13 +351,13 @@ Char_rename2 <- Char_rename |>
     ungroup() %>%
     group_by(AU_ID, AU_GNIS_Name, Char_Name, Pollu_ID, wqstd_code, period) %>%
     summarise(stations =  stringr::str_c(unique(stations), collapse = "; "),
-              IR_category_GNIS_24 = max(IR_category),
+              IR_category_GNIS_26 = max(IR_category),
               Rationale_GNIS = str_c(Rationale,collapse =  " ~ " ),
               Delist_eligability = max(Delist_eligability)) %>% 
-    mutate(Delist_eligability = case_when(Delist_eligability == 1 & IR_category_GNIS_24 == '2'~ 1,
+    mutate(Delist_eligability = case_when(Delist_eligability == 1 & IR_category_GNIS_26 == '2'~ 1,
                                           TRUE ~ 0)) |> 
-    mutate(IR_category_GNIS_24 = factor(IR_category_GNIS_24, levels=c('Unassessed', '3D',"3", "3B","3C", "2", "5", '4A', '4B', '4C'), ordered=TRUE)) |> 
-    mutate(recordID = paste0("2024-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code,"-", period ))  
+    mutate(IR_category_GNIS_26 = factor(IR_category_GNIS_26, levels=c('Unassessed', '3D',"3", "3B","3C", "2", "5", '4A', '4B', '4C'), ordered=TRUE)) |> 
+    mutate(recordID = paste0("2026-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code,"-", period ))  
   
   WS_GNIS_rollup <- join_prev_assessments(WS_GNIS_rollup, AU_type = "WS") |> 
     select(-Char_Name) |> 
@@ -400,7 +400,7 @@ Char_rename2 <- Char_rename |>
   AU_display_ws <- WS_AU_rollup |> 
     rename(prev_category = prev_AU_category,
            prev_rationale = prev_AU_rationale,
-           final_AU_cat = IR_category_AU_24,
+           final_AU_cat = IR_category_AU_26,
            Rationale = Rationale_AU)
   
   
@@ -411,9 +411,9 @@ Char_rename2 <- Char_rename |>
     join_AU_info() |> 
     relocate(prev_category, .after = year_last_assessed) |> 
     relocate(prev_rationale, .after = prev_category) |> 
-    mutate(year_last_assessed = case_when(status_change != 'No change in status- No new assessment' ~ "2024",
+    mutate(year_last_assessed = case_when(status_change != 'No change in status- No new assessment' ~ "2026",
                                           TRUE ~ year_last_assessed)) |> 
-    mutate(Year_listed = case_when(final_AU_cat %in% c("5", '4A') & is.na(Year_listed) ~ '2024',
+    mutate(Year_listed = case_when(final_AU_cat %in% c("5", '4A') & is.na(Year_listed) ~ '2026',
                                    TRUE ~  Year_listed)) 
   
   

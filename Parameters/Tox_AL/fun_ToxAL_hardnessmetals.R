@@ -56,9 +56,10 @@ Hardness_based_metals <- function(database){
                                 ,[IRResultNWQSunit]
                                 ,[Result_Depth]
                                 ,[IRWQSUnitName]
-                                ,[Result_UID]
+                                ,[Result_UID],
+                                chr_uid
                                 FROM [IntegratedReport].[dbo].[ResultsRawWater]
-                                WHERE chr_uid in (1097, 727, 1244) 
+                                WHERE chr_uid in (1097, 727, 1244,103522, 1097, 1099) 
                                 AND (Statistical_Base IS NULL)
                                 AND MLocID in ({mlocs*})
                                 AND IRResultNWQSunit IS NOT NULL", .con = con)
@@ -72,7 +73,9 @@ Hardness_based_metals <- function(database){
     pull(Result_UID)
   
   Results_ancillary <- Results_ancillary |> 
-    filter(!Result_UID %in% exclude_data)
+    filter(!Result_UID %in% exclude_data) |> 
+    mutate(Char_Name = case_when(chr_uid %in% c(1097, 1099, 103522) ~ 'Hardness',
+                                 TRUE ~ Char_Name))
   
   
   
@@ -85,7 +88,7 @@ Hardness_based_metals <- function(database){
   # Choose only the first result for that day
   # Spread the data from long format to wide format
   spread <- Results_ancillary %>%
-    filter(!Sample_Fraction %in% c("Suspended")) %>%
+    filter(!Sample_Fraction %in% c("Suspended", "None")) %>% #Removing None, based on conversation with Sarah Rockwell. 
     mutate(Simplfied_Sample_Fraction = ifelse(Sample_Fraction %in% c("Total Recoverable", "Acid Soluble") | is.na(Sample_Fraction), 'Total', Sample_Fraction )) %>%
     mutate(Char_Name = paste(Char_Name, "-", Simplfied_Sample_Fraction)) %>%
     select(-Sample_Fraction, -Char_Speciation, -IRWQSUnitName) %>%
@@ -107,8 +110,8 @@ Hardness_based_metals <- function(database){
   # If we don't have either, use total calcium and Magnesium
   # use dissolved fractions of Ca and Mg, if we don't have total
   Hardness <- spread %>%
-    mutate(Hardness = ifelse(!is.na(Hardness_Ca_Mg_Total), Hardness_Ca_Mg_Total, 
-                             ifelse(!is.na(Hardness_Ca_Mg_Dissolved), Hardness_Ca_Mg_Dissolved, 
+    mutate(Hardness = ifelse(!is.na(Hardness_Total), Hardness_Total, 
+                             ifelse(!is.na(Hardness_Dissolved), Hardness_Dissolved, 
                                     ifelse(!is.na(Calcium_Total) & !is.na(Magnesium_Total), 2.497*Calcium_Total + 4.1189*Magnesium_Total, 
                                            ifelse(!is.na(Calcium_Total) & !is.na(Magnesium_Dissolved) & is.na(Magnesium_Total) , 2.497*Calcium_Total + 4.1189*Magnesium_Dissolved, 
                                                   ifelse(!is.na(Calcium_Dissolved) & is.na(Calcium_Total) & !is.na(Magnesium_Total), 2.497*Calcium_Dissolved + 4.1189*Magnesium_Total, 
@@ -266,7 +269,7 @@ Hardness_based_metals <- function(database){
                                                                                                  num_samples, " total samples")
            )) %>%
     mutate(IR_category = factor(IR_category, levels=c("3D", "3", "3B", "2", "5" ), ordered=TRUE)) |> 
-    mutate(recordID = paste0("2024-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code)) |> 
+    mutate(recordID = paste0("2026-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code)) |> 
     mutate(period = NA_character_) |> 
     mutate(Delist_eligability = case_when(num_samples >= 18 & num_excursions_dissolved_fraction <= binomial_delisting(num_samples, 'Toxics')  ~ 1,
                                           TRUE ~ 0)) 
@@ -315,13 +318,13 @@ Hardness_based_metals <- function(database){
     ungroup() %>%
     group_by(AU_ID, AU_GNIS_Name, Char_Name, Pollu_ID, wqstd_code, period) %>%
     summarise(stations =  stringr::str_c(unique(stations), collapse = "; "),
-              IR_category_GNIS_24 = max(IR_category),
+              IR_category_GNIS_26 = max(IR_category),
               Rationale_GNIS = str_c(Rationale,collapse =  " ~ " ),
               Delist_eligability = max(Delist_eligability)) %>% 
-    mutate(Delist_eligability = case_when(Delist_eligability == 1 & IR_category_GNIS_24 == '2'~ 1,
+    mutate(Delist_eligability = case_when(Delist_eligability == 1 & IR_category_GNIS_26 == '2'~ 1,
                                           TRUE ~ 0)) |> 
-    mutate(IR_category_GNIS_24 = factor(IR_category_GNIS_24, levels=c('Unassessed', '3D',"3", "3B","3C", "2", "5", '4A', '4B', '4C'), ordered=TRUE)) |> 
-    mutate(recordID = paste0("2024-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code,"-", period ))  
+    mutate(IR_category_GNIS_26 = factor(IR_category_GNIS_26, levels=c('Unassessed', '3D',"3", "3B","3C", "2", "5", '4A', '4B', '4C'), ordered=TRUE)) |> 
+    mutate(recordID = paste0("2026-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code,"-", period ))  
   
   WS_GNIS_rollup <- join_prev_assessments(WS_GNIS_rollup, AU_type = "WS") |> 
     select(-Char_Name) |> 
@@ -362,7 +365,7 @@ Hardness_based_metals <- function(database){
   AU_display_ws <- WS_AU_rollup |> 
     rename(prev_category = prev_AU_category,
            prev_rationale = prev_AU_rationale,
-           final_AU_cat = IR_category_AU_24,
+           final_AU_cat = IR_category_AU_26,
            Rationale = Rationale_AU)
   
   AU_display <- bind_rows(AU_display_other, AU_display_ws)|> 
@@ -372,9 +375,9 @@ Hardness_based_metals <- function(database){
     join_AU_info() |> 
     relocate(prev_category, .after = year_last_assessed) |> 
     relocate(prev_rationale, .after = prev_category) |> 
-    mutate(year_last_assessed = case_when(status_change != 'No change in status- No new assessment' ~ "2024",
+    mutate(year_last_assessed = case_when(status_change != 'No change in status- No new assessment' ~ "2026",
                                           TRUE ~ year_last_assessed)) |> 
-    mutate(Year_listed = case_when(final_AU_cat %in% c("5", '4A') & is.na(Year_listed) ~ '2024',
+    mutate(Year_listed = case_when(final_AU_cat %in% c("5", '4A') & is.na(Year_listed) ~ '2026',
                                    TRUE ~  Year_listed)) 
   
   

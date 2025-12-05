@@ -15,13 +15,14 @@ turb_data <- function(database) {
   # Get data from IR database where wqstd_code = 12, ResStatusName = Final, 
   # Join with Crit_Temp to get temperature Criteria and spawn ?
   Results_import <-    tbl(IR.sql, "VW_Turbidity") |> 
+    filter(wqstd_code == 9) |> 
     collect()
   
   
   DBI::dbDisconnect(IR.sql)
   
   Results_import <- Results_import |> 
-    mutate(Result_UID = as.character(Result_UID)) |> 
+    #mutate(Result_UID = as.character(Result_UID)) |> 
     mutate(SampleStartDate = lubridate::ymd(SampleStartDate))
   
   print(paste("Fetched", nrow(Results_import), "results from", length(unique(Results_import$MLocID)), "monitoring locations" ))

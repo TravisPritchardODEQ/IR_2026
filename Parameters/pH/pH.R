@@ -1,9 +1,9 @@
-source("Parameters/pH/function_pH_data_saved_cont.R")
+source("Parameters/pH/function_pH_data.R")
 source("Parameters/pH/function_ten_ten.R")
 
 library(openxlsx)
 
-pH_data <- cont_ph_raw_saved_cont("IR_Dev")
+pH_data <- cont_ph_raw("IR_Dev")
 
 
 pH_cont <- pH_data[["pH_cont"]]

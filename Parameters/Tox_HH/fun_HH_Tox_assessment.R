@@ -231,7 +231,7 @@ fun_Tox_HH_analysis <-function(df, write_excel = TRUE, database = "IR_Dev"){
       mutate(IR_category = factor(IR_category, levels=c("3D", "3", "3B", "2", "5" ), ordered=TRUE)) %>%
       rename(Char_Name = Pollutant)|> 
       mutate(period = NA_character_) |> 
-      mutate(Delist_eligability = case_when( IR_category == '2'  ~ 1,
+      mutate(Delist_eligability = case_when( IR_category == '2' & num_samples >= 2 ~ 1,
                                             TRUE ~ 0)) 
     
 
@@ -279,8 +279,7 @@ fun_Tox_HH_analysis <-function(df, write_excel = TRUE, database = "IR_Dev"){
   WS_GNIS_rollup <- join_prev_assessments(WS_GNIS_rollup, AU_type = "WS") |> 
     select(-Char_Name) |> 
     left_join(Char_rename) |> 
-    relocate(Char_Name, .after = AU_GNIS_Name)|> 
-    filter(AU_ID %in% aus)
+    relocate(Char_Name, .after = AU_GNIS_Name)
   
   ### Delist process --------------------------------------------------------------------------------------------------
   
@@ -293,8 +292,7 @@ fun_Tox_HH_analysis <-function(df, write_excel = TRUE, database = "IR_Dev"){
     ungroup() |> 
     select(-Char_Name) |> 
     left_join(Char_rename, by = join_by(Pollu_ID)) |> 
-    relocate(Char_Name, .after = AU_ID)|> 
-    filter(AU_ID %in% aus)
+    relocate(Char_Name, .after = AU_ID)
   
   # Other assessment ------------------------------------------------------------------------------------------------
 
@@ -304,8 +302,7 @@ fun_Tox_HH_analysis <-function(df, write_excel = TRUE, database = "IR_Dev"){
     ungroup() |> 
     select(-Char_Name) |> 
     left_join(Char_rename) |> 
-    relocate(Char_Name, .after = AU_ID)|> 
-    filter(AU_ID %in% aus)
+    relocate(Char_Name, .after = AU_ID)
   
   other_category_delist <-  assess_delist(other_category, type = "Other")  |> 
     mutate(recordID = paste0("2026-",odeqIRtools::unique_AU(AU_ID),"-", Pollu_ID, "-", wqstd_code,"-", period ))  

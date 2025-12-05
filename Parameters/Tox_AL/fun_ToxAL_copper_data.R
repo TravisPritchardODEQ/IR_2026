@@ -19,7 +19,7 @@ Copper_data <- function(database){
   #open connection to database
   con <- DBI::dbConnect(odbc::odbc(), database)
   
-  #Build query language to get Pentachlorophenol data out. this grabs the IR 2018 db view [dbo].[VW_Pentachlorophenol]
+  #Build query language to get copper data out. this grabs the IR 2018 db view [dbo].[VW_copper]
   
   db_qry <- glue::glue_sql( "SELECT *
   FROM [IntegratedReport].[dbo].[VW_Copper]", .con = con)
@@ -57,7 +57,7 @@ unused_data <- tbl(con, 'Unused_Results')  |>
 ,[IRWQSUnitName]
 ,[Result_Depth]
 FROM [IntegratedReport].[dbo].[ResultsRawWater]
-WHERE chr_uid in ('2849', '1648', '727', '1244', 1802, 1709, 1827, 773, 544, 100331, 1097, 1099, 2174, 2982, 103437) 
+WHERE chr_uid in (2849, 1648, 727, 1244, 1802, 1709, 1827, 773, 544, 100331, 1097, 1099, 2174, 2982, 103437, 101942, 100455, 103522, 8071, 1815, 168) 
       AND (Statistical_Base IS NULL)
       AND MLocID in ({mlocs*})", .con = con)
   
@@ -71,10 +71,13 @@ WHERE chr_uid in ('2849', '1648', '727', '1244', 1802, 1709, 1827, 773, 544, 100
   
   spread <- Results_ancillary %>%
     filter(!Result_UID %in% unused_data) |> 
-    mutate(Char_Name = ifelse(chr_uid %in% c(544, 100331, 103437), 'Alkalinity', 
-                              ifelse(chr_uid %in% c(1097, 1099), 'Hardness', 
-                                     ifelse(chr_uid == 2174 & Sample_Fraction == "Total" , 'TOC', 
-                                            ifelse(chr_uid == 2174 & Sample_Fraction == "Dissolved", 'DOC', Char_Name ))))) %>%
+    mutate(Char_Name = case_when(chr_uid %in% c(544, 100331, 103437, 101942, 100455) ~ 'Alkalinity',
+                                 chr_uid %in% c(1097, 1099, 103522) ~ 'Hardness',
+                                 chr_uid == 2174 & Sample_Fraction == "Total" ~ 'TOC', 
+                                 chr_uid == 2174 & Sample_Fraction == "Dissolved" ~ 'DOC',
+                                 chr_uid %in%  c(8071,2849 ) ~ 'Temperature',
+                                 chr_uid %in%  c(2982,1815,168 ) ~ 'Conductivity',
+                                 TRUE  ~ Char_Name))%>%
     mutate(IRWQSUnitName = ifelse(Result_Unit == "None", 'None', IRWQSUnitName )) %>%
     mutate(IRResultNWQSunit = ifelse(IRWQSUnitName == 'ug/l', IRResultNWQSunit / 1000, IRResultNWQSunit),
            Result_Unit = ifelse(IRWQSUnitName == 'ug/l', "mg/L", IRWQSUnitName)) %>%
