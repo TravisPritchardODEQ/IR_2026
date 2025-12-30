@@ -45,7 +45,10 @@ fun_temp_analysis <- function(df, write_excel = TRUE){
            # Flag for results in critical period
            In_crit_period = ifelse(SampleStartDate >=Crit_period_start & SampleStartDate <= Cirt_period_end, 1, 0 ),
            # Print if result is in spawn or out of spawn
-           Spawn_type = ifelse((SampleStartDate >= Start_spawn & SampleStartDate <= End_spawn & !is.na(Start_spawn)),  "Spawn", "Not_Spawn"),
+           Spawn_type = case_when(SampleStartDate >= Start_spawn + lubridate::days(6) & SampleStartDate <= End_spawn & !is.na(Start_spawn) ~ "Spawn",
+                                  SampleStartDate >= Start_spawn  & SampleStartDate <= End_spawn & !is.na(Start_spawn) ~ "Early spawn- Not assessed for spawning",
+                                  TRUE ~ 'Not_Spawn'
+                                  ),
            # Flag if result violates standard,  use 13 for during spawn dates, else use criteria
            year_round_Violation = ifelse(Result_cen > Temp_Criteria, 1, 0),
            # Flag for is violation was in spawn period
