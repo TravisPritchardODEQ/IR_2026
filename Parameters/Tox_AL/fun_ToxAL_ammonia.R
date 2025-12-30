@@ -34,28 +34,27 @@ ToxAL_Ammonia <- function(database){
   mlocs <- unique(Results_import_no_NAs$MLocID)
   
   # chr_uids for ammonia ancillary data
-  # Temp = 2849
+  # Temp = 2849, 8071
   # pH = 1648
   
   print("Fetch ancillary data from IR database")
-  ancillary_qry <- glue::glue_sql("SELECT [MLocID]
-                                ,[SampleStartDate]
-                                ,[Char_Name]
-                                ,[Char_Speciation]
-                                ,[Sample_Fraction]
-                                ,[IRResultNWQSunit]
-                                ,[Result_Depth]
-                                ,[IRWQSUnitName]
-                                FROM [IntegratedReport].[dbo].[InputRaw]
-                                WHERE chr_uid in (2849, 1648) 
-                                AND (Statistical_Base IS NULL)
-                                AND MLocID in ({mlocs*})
-                                AND IRResultNWQSunit IS NOT NULL", .con = con)
   
   
+  Results_ancillary <- tbl(con, "InputRaw") |> 
+    filter(chr_uid %in% c('2849', '8071', '1648'),
+           is.null(Statistical_Base),
+           !is.null(IRResultNWQSunit)) |> 
+    select(MLocID,
+           SampleStartDate,
+           Char_Name,
+           Char_Speciation,
+           Sample_Fraction,
+           IRResultNWQSunit,
+           Result_Depth,
+           IRWQSUnitName) |> 
+    filter(MLocID %in% mlocs) |> 
+    collect()
   
-  #Query to get ancillary data
-  Results_ancillary <- DBI::dbGetQuery(con, ancillary_qry)
   
   
   print("Joining ancillary data")
@@ -63,11 +62,13 @@ ToxAL_Ammonia <- function(database){
   # Spread the data from long format to wide format
   spread <- Results_ancillary %>%
     filter(!Sample_Fraction %in% c("Suspended")) %>%
+    mutate(Char_Name =case_when(Char_Name %in% c("Temperature, water", "Temperature") ~ "Temp",
+                                TRUE ~ Char_Name)) |> 
     group_by(MLocID, SampleStartDate,Char_Name,Result_Depth  ) %>%
     summarise(result = first(IRResultNWQSunit)) %>%
     arrange(MLocID, SampleStartDate) %>%
     spread(key = Char_Name, value = result) %>%
-    rename(Temp = "Temperature, water") %>%
+   # rename(Temp = "Temperature, water") %>%
     mutate(pH = ifelse(pH < 6.5, 6.5, 
                        ifelse(pH > 9.0, 9.0, pH )))
   

@@ -52,6 +52,16 @@ WS_station_categorization <- bind_rows(DO_Year_Round$WS_station_categorization, 
 
 # Write Excel -----------------------------------------------------------------------------------------------------
 
+# Truncate values
+
+# 5 less than excel max character
+truncate_characters <- 3000 - 5
+
+AU_display <- AU_display |> 
+  mutate(across(where(is.character), ~ str_trunc(., width = truncate_characters, ellipsis = "...")))
+
+
+
 wb <- createWorkbook()
 
 addWorksheet(wb, sheetName = "AU_Decisions", tabColour = 'forestgreen')

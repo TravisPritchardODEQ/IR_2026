@@ -321,7 +321,7 @@ Chromium_data <- df  %>%
   
   #Deal with Chromium
   
-  Results_tox_AL_categories_chrom <- Results_tox_AL_categories |> 
+  Results_tox_AL_categories <- Results_tox_AL_categories |> 
     mutate(IR_category = case_when((Char_Name == 'Chromium' & IR_category == '5') ~ "3B",
                                     TRUE ~ IR_category),
            Rationale = case_when(Char_Name == 'Chromium' ~ paste0("Total Chromium assessed as Chromium(VI). ", Rationale),
@@ -332,9 +332,20 @@ Chromium_data <- df  %>%
                                 TRUE ~ Pollu_ID),
            )
   
+  # Deal with alkalinity
+  # 
+  
+  Results_tox_AL_categories <- Results_tox_AL_categories |> 
+    mutate( Rationale = case_when((Char_Name == 'Alkalinity' & IR_category == '5') ~ 
+                                    paste0("Impaired Alkalinity flagged as a Category 3B. ", Rationale),
+                                  TRUE ~ Rationale),
+            IR_category = case_when((Char_Name == 'Alkalinity' & IR_category == '5') ~ "3B",
+                                   TRUE ~ IR_category)
+          
+    )
 
   
-  return(Results_tox_AL_categories_chrom)
+  return(Results_tox_AL_categories)
   }
   
 Char_rename2 <- Char_rename |> 

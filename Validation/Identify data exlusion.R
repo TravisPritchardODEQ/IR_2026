@@ -518,6 +518,21 @@ cont_dupes <- IR_cont_res %>%
 dbAppendTable(IR.sql, 'Unused_Results', cont_dupes,row.names = NULL)
 
 
+
+# Non Numeric data --------------------------------------------------------
+
+InputRaw <- tbl(IR.sql, "InputRaw")
+
+non_numeric <- InputRaw |> 
+  filter(is.na(Result_Numeric)) |> 
+  collect()
+
+unused_non_numeric <- non_numeric |> 
+  transmute(Result_UID, Char_Name, Data_Review_Comment = "Non numeric result.")
+
+dbAppendTable(IR.sql, 'Unused_Results', unused_non_numeric,row.names = NULL)
+
+
 # 
 # continuous_exlude <- cont_diff_depths_exclude %>%
 #   bind_rows(equipment_cont_res_exclude)
