@@ -74,7 +74,7 @@ Hardness_based_metals <- function(database){
   
   Results_ancillary <- Results_ancillary |> 
     filter(!Result_UID %in% exclude_data) |> 
-    mutate(Char_Name = case_when(chr_uid %in% c(1097, 1099, 103522) ~ 'Hardness',
+    mutate(Char_Name = case_when(chr_uid %in% c(1097, 103522) ~ 'Hardness',
                                  TRUE ~ Char_Name))
   
   

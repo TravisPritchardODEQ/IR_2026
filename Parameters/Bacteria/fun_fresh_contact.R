@@ -388,9 +388,9 @@ AU_display_ws_entero <- entero_ws_AU_cat |>
 
 
 AU_display <- bind_rows(AU_display_other, 
-                        #AU_display_other_entero, 
+                        AU_display_other_entero, 
                         AU_display_ws, 
-                        #AU_display_ws_entero
+                        AU_display_ws_entero
                         ) |> 
   mutate(Rationale = case_when(is.na(Rationale) ~ prev_rationale,
                                .default = Rationale))|> 
@@ -451,18 +451,18 @@ header_st <- createStyle(textDecoration = "Bold", border = "Bottom")
 writeData(wb = wb, sheet = "AU_Decisions", x = AU_display, headerStyle = header_st)
 
 writeData(wb = wb, sheet = "Other_AU_categorization", x = fresh_AU_summary_no_WS_delist, headerStyle = header_st)
-#writeData(wb = wb, sheet = "Other_AU_categorization_entero", x = entero_other_AU_cat, headerStyle = header_st)
+writeData(wb = wb, sheet = "Other_AU_categorization_entero", x = entero_other_AU_cat, headerStyle = header_st)
 
 writeData(wb = wb, sheet = "WS station categorization", x = fresh_AU_summary_WS0, headerStyle = header_st)
-#writeData(wb = wb, sheet = "WS station cat_entero", x = entero_ws_MLOC_cat, headerStyle = header_st)
+writeData(wb = wb, sheet = "WS station cat_entero", x = entero_ws_MLOC_cat, headerStyle = header_st)
 
 writeData(wb = wb, sheet = "WS GNIS categorization", x = WS_GNIS_rollup_delist, headerStyle = header_st)
-#writeData(wb = wb, sheet = "WS GNIS categorization_entero", x = entero_ws_GNIS_cat, headerStyle = header_st)
+writeData(wb = wb, sheet = "WS GNIS categorization_entero", x = entero_ws_GNIS_cat, headerStyle = header_st)
 
 writeData(wb = wb, sheet = "Fresh Bacteria Data_WS", x = fresh_contact_geomeans, headerStyle = header_st)
 writeData(wb = wb, sheet = "Fresh Bacteria Data_other", x = fresh_contact_geomeans_other, headerStyle = header_st)
-#writeData(wb = wb, sheet = "Fresh Entero Bact Data_other", x = entero_other_data, headerStyle = header_st)
-#writeData(wb = wb, sheet = "Fresh Entero Bact Data_WS", x = entero_ws_data, headerStyle = header_st)
+writeData(wb = wb, sheet = "Fresh Entero Bact Data_other", x = entero_other_data, headerStyle = header_st)
+writeData(wb = wb, sheet = "Fresh Entero Bact Data_WS", x = entero_ws_data, headerStyle = header_st)
 
 
 print("Writing excel doc")

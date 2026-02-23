@@ -75,14 +75,19 @@ ToxAL_Ammonia <- function(database){
   
   # Join table together
   # Calculate crit
-  # Enter fish codes for non-slmonid fish use
+  # Enter fish codes for non-salmonid fish use
   ammonia_data <- Results_import %>%
     left_join(spread, by = c('MLocID', 'SampleStartDate', 'Result_Depth')) %>%
     filter(!is.na(pH) & !is.na(Temp)) %>%
-    mutate(crit = ifelse(FishCode %in% c(11, 21, 99), 0.7249 * (0.0114 / (1 + 10^7204-pH)) + (1.6181 / (1 + 10 ^(pH-7204)) * min(51.93, 23.13*10^(0.036*(20-Temp)))),  
-                         pmin((0.275/(1 + 10 ^ (7.204 - pH))) + (39.0/ (1 + 10 ^(pH - 7.204 ))) , 
-                              0.7249 * ((0.0114/ ( 1 + 10^(7.204 - pH))) + (1.6181 / (1 + 10 ^ (pH - 7.204))) * (23.12*10^(0.036*(20-Temp))))) )  
-    )
+    mutate(crit_acute = case_when(FishCode %in% c(11, 21, 99) ~ 0.7249 * (0.0114 / (1 + 10^7204-pH)) + (1.6181 / (1 + 10 ^(pH-7204)) * min(51.93, 23.13*10^(0.036*(20-Temp)))), #No Salmonid
+                                  TRUE ~   pmin((0.275/(1 + 10 ^ (7.204 - pH))) + (39.0/ (1 + 10 ^(pH - 7.204 ))), #Salmonids
+                                                 0.7249 * ((0.0114/ ( 1 + 10^(7.204 - pH))) + (1.6181 / (1 + 10 ^ (pH - 7.204))) * (23.12*10^(0.036*(20-Temp)))))
+                                   ),
+           crit_chronic = 0.8876*((0.0278/(1+10^(7.688-pH )))+(1.1994/(1+10^(pH -7.688))))*(2.126*10^(0.028*(20-pmax(Temp,7))))
+    ) |> 
+    mutate(crit_chronic_adj = 2.5*crit_chronic) |> 
+    mutate(crit = pmin(crit_acute, crit_chronic_adj))
+
   
   Results_censored <- censor_data(ammonia_data, criteria_col =  crit ) %>%
     mutate(Simplfied_Sample_Fraction = ifelse(Sample_Fraction %in% c("Dissolved", "Filterable"),  "Dissolved", "Total" )) %>%

@@ -26,8 +26,8 @@ unused_results_dup_remove <- tbl(IR.sql, 'Unused_Results') |>
   collect() |> 
   distinct()
 
-
-DBI::dbWriteTable(IR.sql, "Unused_Results", unused_results_dup_remove, overwrite = TRUE)
+# 
+# DBI::dbWriteTable(IR.sql, "Unused_Results", unused_results_dup_remove, overwrite = TRUE)
 
 
 
@@ -531,6 +531,22 @@ unused_non_numeric <- non_numeric |>
   transmute(Result_UID, Char_Name, Data_Review_Comment = "Non numeric result.")
 
 dbAppendTable(IR.sql, 'Unused_Results', unused_non_numeric,row.names = NULL)
+
+
+
+
+# Hardness, non-carbonate --------------------------------------------------------
+
+ResultsRawWater <- tbl(IR.sql, "ResultsRawWater")
+
+Hardness_non_carbonate <- ResultsRawWater |> 
+  filter(chr_uid == 1099) |> 
+  collect()
+
+unused_Hardness_non_carbonate <- Hardness_non_carbonate |> 
+  transmute(Result_UID, Char_Name, Data_Review_Comment = "'Hardness, non-carbonate' results not valid for WQ standards calculations")
+
+dbAppendTable(IR.sql, 'Unused_Results', unused_Hardness_non_carbonate,row.names = NULL)
 
 
 # 

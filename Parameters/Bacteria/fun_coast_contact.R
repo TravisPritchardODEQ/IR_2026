@@ -33,7 +33,7 @@ coast_contact <- function(df, type = "coast", write_excel = TRUE, database = 'IR
   if(type == "coast"){
     
     Coastal <- df %>%
-      filter(Bacteria_code %in%  c(1, 3, 4),
+      filter(Bacteria_code %in%  c(1, 3),
              Char_Name == "Enterococcus")
   } else if (type == "freshwater") {
     Coastal <- df %>%
