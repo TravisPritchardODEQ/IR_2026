@@ -526,6 +526,13 @@ map_display_GNIS <- GNIS_decisions |>
 
 
 
+# 303(d) ------------------------------------------------------------------
+
+list_303d <- AU_decisions |> 
+  filter(str_detect(final_AU_cat, "5"))
+
+
+
 # Write excel -----------------------------------------------------------------------------------------------------
 
 
@@ -535,10 +542,11 @@ print_list <- list('AU_decisions'    = AU_decisions      ,
                    'BU_rollup'       = BU_rollup         ,
                    'BU_rollup_wide'  = BU_rollup_wide    ,
                    'map_display'     = map_display      ,
-                   "map_display_GNIS" = map_display_GNIS)
+                   "map_display_GNIS" = map_display_GNIS,
+                   "303d" = list_303d)
 
 
-write.xlsx(print_list, file = paste0("C:/Users/tpritch/OneDrive - Oregon/DEQ - Integrated Report - IR_2026/Draft IR/internal_draft/IR_2026_Internal_review_Rollup-", Sys.Date(),  ".xlsx") )
+write.xlsx(print_list, file = paste0("C:/Users/tpritch/OneDrive - Oregon/DEQ - Integrated Report - IR_2026/Draft IR/Public_draft/IR_2026_Draft_Rollup-", Sys.Date(),  ".xlsx") )
 
 
 save(print_list, file = 'draft_list/draft_list.Rdata')
