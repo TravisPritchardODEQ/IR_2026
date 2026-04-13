@@ -12,9 +12,9 @@ coast_contact <- function(df, type = "coast", write_excel = TRUE, database = 'IR
 
 
  #df <- Bacteria_results 
- # type = "coast"
- #write_excel = TRUE
-#database = 'IR_Dev'
+# type = "coast"
+# write_excel = TRUE
+# database = 'IR_Dev'
   # Char rename -----------------------------------------------------------------------------------------------------
   con <- DBI::dbConnect(odbc::odbc(), database)
   
@@ -331,8 +331,14 @@ AU_display_ws <- WS_AU_rollup_joined |>
 # 
 # AU_display <- bind_rows(AU_display_other, AU_display_ws) |>
 #   mutate(Rationale = case_when(is.na(Rationale) ~ prev_rationale,
+#     
+#     
 #                                TRUE ~ Rationale))
-AU_display <-  bind_rows(AU_display_other,  AU_display_ws) |> 
+#                                
+#                                
+AU_display <- AU_display_other |> 
+  mutate(Pollu_ID = is.numeric(Pollu_ID)) |> 
+#AU_display <-  bind_rows(AU_display_other,  AU_display_ws) |> 
   mutate(Rationale = case_when(is.na(Rationale) ~ prev_rationale,
                                TRUE ~ Rationale)) |> 
   join_TMDL(type = 'AU')|> 
@@ -367,11 +373,11 @@ if(write_excel){
   writeData(wb = wb, sheet = "AU_Decisions", x = AU_display, headerStyle = header_st)
   
   writeData(wb = wb, sheet = "Other_AU_categorization", x = coast_AU_summary_no_WS_delist, headerStyle = header_st)
-  writeData(wb = wb, sheet = "WS station categorization", x = coast_AU_summary_WS0, headerStyle = header_st)
-  writeData(wb = wb, sheet = "WS GNIS categorization", x = WS_GNIS_rollup_delist, headerStyle = header_st)
+ # writeData(wb = wb, sheet = "WS station categorization", x = coast_AU_summary_WS0, headerStyle = header_st)
+  # writeData(wb = wb, sheet = "WS GNIS categorization", x = WS_GNIS_rollup_delist, headerStyle = header_st)
   
-  writeData(wb = wb, sheet = "Coast Contact Raw Data", x = df, headerStyle = header_st)
-  writeData(wb = wb, sheet = "Coast Contact WS Data", x = coast_contact_geomeans_no_WS, headerStyle = header_st )
+  writeData(wb = wb, sheet = "Coast Contact Raw Data", x = Coastal, headerStyle = header_st)
+  #writeData(wb = wb, sheet = "Coast Contact WS Data", x = coast_contact_geomeans_no_WS, headerStyle = header_st )
   writeData(wb = wb, sheet = "Coast Contact other Data", x = coast_contact_geomeans_no_WS, headerStyle = header_st )
   
 

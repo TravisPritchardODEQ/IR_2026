@@ -405,6 +405,8 @@ all_ben_uses_2 <- all_ben_uses |>
 
 
 AU_BU <- AU_decisions %>%
+  mutate(Pollu_ID = as.character(Pollu_ID),
+         wqstd_code = as.character(wqstd_code)) |> 
   left_join(select(LU_BU_Assessment, -Assessment), by = c("Pollu_ID", 'wqstd_code'), relationship = "many-to-many" ) %>%
   mutate(AU_UseCode = as.character(AU_UseCode)) |> 
   right_join(all_ben_uses_2) %>%
@@ -441,8 +443,13 @@ BU_rollup <- AU_BU %>%
   relocate(AU_Name, .after='AU_ID') |> 
   arrange(AU_ID)
 
-
-
+BU_AU_mapdisplay <- BU_rollup |> 
+  group_by(AU_ID) |> 
+  summarise(Impaired_Ben_Uses = str_c(ben_use[str_detect(Category, '5') |str_detect(Category, '4') ], collapse = "; "),
+            Attaining_Ben_Uses = str_c(ben_use[str_detect(Category, '2')], collapse = "; "),
+            Insufficient_Ben_Uses	 = str_c(ben_use[str_detect(Category, '3')], collapse = "; "),
+            Unassessed_Ben_Uses = str_c(ben_use[str_detect(Category, 'Unassessed')], collapse = "; "),
+              )
 
 BU_rollup_wide <- BU_rollup %>%
   select(-parameters) |> 
@@ -450,6 +457,15 @@ BU_rollup_wide <- BU_rollup %>%
   spread(ben_use, Category, fill = "-") 
 
 
+assess_ben_use <- AU_BU |> 
+  group_by(AU_ID, Pollu_ID, wqstd_code, period) |> 
+  summarise(ben_uses = str_c(ben_use, collapse = '; ')) |> 
+  mutate(Pollu_ID = as.numeric(Pollu_ID),
+         wqstd_code = as.numeric(wqstd_code))
+
+AU_decisions <- AU_decisions |> 
+  left_join(assess_ben_use)
+  
 
 
 # Map display -----------------------------------------------------------------------------------------------------
@@ -492,7 +508,8 @@ map_display <- AU_decisions |>
             Cat_3D_count = length(pollutant_strd[final_AU_cat == '3D']),
             Cat_3_count_total = sum(Cat_3_count, Cat_3B_count, Cat_3D_count),
             Insufficient_parameters = str_flatten(unique(pollutant_strd[!is.na(final_AU_cat) & str_detect(final_AU_cat, '3')]), ", ")
-  )
+  ) |> 
+  left_join(BU_AU_mapdisplay)
 
 map_display_GNIS <- GNIS_decisions |> 
   mutate(final_GNIS_cat = factor(final_GNIS_cat, 
@@ -547,7 +564,7 @@ print_list <- list('AU_decisions'    = AU_decisions      ,
 
 
 write.xlsx(print_list, file = paste0("C:/Users/tpritch/OneDrive - Oregon/DEQ - Integrated Report - IR_2026/Draft IR/Public_draft/IR_2026_Draft_Rollup-", Sys.Date(),  ".xlsx") )
-
+write.xlsx(AU_decisions, file = "AU_decisions_update.xlsx")
 
 save(print_list, file = 'draft_list/draft_list.Rdata')
 

@@ -77,8 +77,7 @@ AU_decisions_update2 <-  AU_decisions_update |>
   mutate(status_change = case_when(Pollu_ID == 132 &
                                      final_AU_cat == "5" &
                                      str_detect(action_ids, "10006|10007|12241|32071|33829|35887|35890|39294|39782|39753") &
-                                     prev_category == '4A' & final_AU_cat == '5' &
-                                     year_last_assessed == '2026' ~ '4A to 5',
+                                     prev_category == '4A' & final_AU_cat == '5' ~ '4A to 5',
                                    
                                    Pollu_ID == 132 &
                                      final_AU_cat == "5" &
@@ -94,6 +93,9 @@ AU_decisions_update2 <-  AU_decisions_update |>
                                    
                                    TRUE ~ status_change))
 
+TMDL_update_list <- list('AU_decisions_update' = AU_decisions_update2,
+                         'GNIS_decisions_update' = GNIS_decisions_update)
 
 
+write.xlsx(TMDL_update_list, file = "TMDL_update_2026_categorization.xlsx")
 
