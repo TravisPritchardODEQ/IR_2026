@@ -19,7 +19,9 @@ source('Parameters/Tox_AL/fun_ToxAL_Copper_assessment.R')
 # Non calculated standards ------------------------------------------------
 
 # Fetch data for analysing the parameters with non-calculated standards
-Tox_AL_Censored_data <- tox_AL_data("IR_Dev")
+Tox_AL_Censored_data <- tox_AL_data("IR_Dev") |> 
+  mutate(AU_ID = case_when(AU_ID == 'OR_SR_1709000306_02_103840' ~ 'OR_SR_1709000306_05_103854',
+                           TRUE ~ AU_ID)) 
 
 # Run the analysis
 Tox_AL_categories <- TOX_AL_analysis(Tox_AL_Censored_data)
@@ -40,7 +42,7 @@ tox_AL_penta_cat <- TOX_AL_penta_analysis(tox_AL_penta_data)
 
 
 #Copper_data("IR_Dev")
-Copper_categories <- copper_assessment(CU_file= 'Parameters/Tox_AL/Copper_criteria_results.csv')
+Copper_categories <- copper_assessment(CU_file= 'Parameters/Tox_AL/Copper_data_4_BLM-2026-07-30_results_ugL.csv')
 
 
 # Ammonia ---------------------------------------------------------------------------------------------------------
@@ -56,8 +58,7 @@ tox_AL_aluminum  <- aluminum_assessment("IR_Dev")
 
 
 tox_AL_data                   <- Tox_AL_categories[["data"]]
-tox_AL_AU_Decisions           <- Tox_AL_categories[["AU_Decisions"]] |> 
-  mutate(Pollu_ID = as.character(Pollu_ID))
+tox_AL_AU_Decisions           <- Tox_AL_categories[["AU_Decisions"]] 
 tox_AL_other_AU_cat           <- Tox_AL_categories[['Other_AU_categorization']]
 tox_AL_WS_cats                <- Tox_AL_categories[["WS_Station_cat"]]
 tox_AL_GNIS_cat               <- Tox_AL_categories[["WS_GNIS_cat"]]
@@ -65,22 +66,19 @@ tox_AL_GNIS_cat               <- Tox_AL_categories[["WS_GNIS_cat"]]
 
 
 tox_AL_hard_data               <- Tox_AL_hardness_cat[["data"]]
-tox_AL_hard_AU_Decisions       <- Tox_AL_hardness_cat[['AU_Decisions']]|> 
-  mutate(Pollu_ID = as.character(Pollu_ID))
+tox_AL_hard_AU_Decisions       <- Tox_AL_hardness_cat[['AU_Decisions']]
 tox_AL_hard_other_AU_cat       <- Tox_AL_hardness_cat[["Other_AU_categorization"]]
 tox_AL_hard_WS_cats            <- Tox_AL_hardness_cat[["WS_Station_cat"]]
 tox_AL_hard_GNIS_cat           <- Tox_AL_hardness_cat[["WS_GNIS_cat"]]
 
 tox_AL_penta_data               <- tox_AL_penta_cat[["data"]]
-tox_AL_penta_AU_Decisions       <- tox_AL_penta_cat[['AU_Decisions']]|>
-  mutate(Pollu_ID = as.character(Pollu_ID))
+tox_AL_penta_AU_Decisions       <- tox_AL_penta_cat[['AU_Decisions']]
 tox_AL_penta_other_AU_cat       <- tox_AL_penta_cat[["Other_AU_categorization"]]
 tox_AL_penta_WS_cats            <- tox_AL_penta_cat[["WS_Station_cat"]]
 tox_AL_penta_GNIS_cat           <- tox_AL_penta_cat[["WS_GNIS_cat"]]
 
 tox_AL_Ammonia_data             <- tox_AL_Ammonia[["data"]]
-tox_AL_Ammonia_AU_Decisions     <- tox_AL_Ammonia[['AU_Decisions']]|>
-  mutate(Pollu_ID = as.character(Pollu_ID))
+tox_AL_Ammonia_AU_Decisions     <- tox_AL_Ammonia[['AU_Decisions']]
 tox_AL_Ammonia_other_AU_cat     <- tox_AL_Ammonia[["Other_AU_categorization"]]
 tox_AL_Ammonia_WS_cats          <- tox_AL_Ammonia[["WS_Station_cat"]]
 tox_AL_Ammonia_GNIS_cat         <- tox_AL_Ammonia[["WS_GNIS_cat"]]
@@ -89,16 +87,14 @@ tox_AL_Ammonia_GNIS_cat         <- tox_AL_Ammonia[["WS_GNIS_cat"]]
 
 
 tox_AL_Aluminum_data            <-  tox_AL_aluminum[["data"]]
-tox_AL_Aluminum_AU_Decisions    <-  tox_AL_aluminum[['AU_Decisions']]|> 
-  mutate(Pollu_ID = as.character(Pollu_ID))
+tox_AL_Aluminum_AU_Decisions    <-  tox_AL_aluminum[['AU_Decisions']]
 tox_AL_Aluminum_other_AU_cat    <-  tox_AL_aluminum[["Other_AU_categorization"]]
 tox_AL_Aluminum_WS_cats         <-  tox_AL_aluminum[["WS_Station_cat"]]
 tox_AL_Aluminum_GNIS_cat        <-  tox_AL_aluminum[["WS_GNIS_cat"]]
 
 
 tox_AL_Copper_data              <- Copper_categories[["data"]]
-tox_AL_Copper_AU_Decisions      <- Copper_categories[['AU_Decisions']]|>
-  mutate(Pollu_ID = as.character(Pollu_ID))
+tox_AL_Copper_AU_Decisions      <- Copper_categories[['AU_Decisions']]
 tox_AL_Copper_other_AU_cat      <- Copper_categories[["Other_AU_categorization"]]
 tox_AL_Copper_WS_cats           <- Copper_categories[["WS_Station_cat"]]
 tox_AL_Copper_GNIS_cat          <- Copper_categories[["WS_GNIS_cat"]]

@@ -207,7 +207,7 @@ fun_Tox_HH_analysis <-function(df, write_excel = TRUE, database = "IR_Dev"){
                 percent_3d = num_3d/num_samples * 100,
                 num_excursions = sum(excursion),
                 geomean = case_when(percent_3d == 100 ~ NA_real_,
-                                    num_not_3d >= 3 ~ geo_mean(evaluation_result[!(is.3d)]),
+                                    num_not_3d >= 3 ~ geo_mean(evaluation_result),
                                     TRUE ~ -NA_real_
                                     )) %>%
       ungroup() %>%
@@ -252,9 +252,7 @@ fun_Tox_HH_analysis <-function(df, write_excel = TRUE, database = "IR_Dev"){
   FROM [IntegratedReport].[dbo].[LU_Pollutant]", .con = con)
   
   # Send query to database and return with the data
-  Char_rename <-  DBI::dbGetQuery(con, db_qry) |> 
-    mutate(Pollu_ID = as.character(Pollu_ID))
-  
+  Char_rename <-  DBI::dbGetQuery(con, db_qry)
   
   # Watershed Assessment --------------------------------------------------------------------------------------------
   
