@@ -359,6 +359,10 @@ GNIS_decisions <- GNIS_decisions |>
 #   distinct()
 
 # Clear all but needed --------------------------------------------------------------------------------------------
+AU_decisions <-  read.xlsx("C:/Users/tpritch/OneDrive - Oregon/DEQ - Integrated Report - IR_2026/Draft IR/Public_draft/IR_2026_Draft_Rollup-2026-03-30.xlsx", sheet = 'AU_decisions')
+
+GNIS_decisions <-  read.xlsx("C:/Users/tpritch/OneDrive - Oregon/DEQ - Integrated Report - IR_2026/Draft IR/Public_draft/IR_2026_Draft_Rollup-2026-03-30.xlsx", sheet = 'GNIS_decisions')
+
 
 rm(list=setdiff(ls(), c("GNIS_decisions", 'AU_decisions')))
 
@@ -464,6 +468,7 @@ assess_ben_use <- AU_BU |>
          wqstd_code = as.numeric(wqstd_code))
 
 AU_decisions <- AU_decisions |> 
+  select(-ben_uses) |> 
   left_join(assess_ben_use)
   
 
@@ -488,13 +493,15 @@ map_display <- AU_decisions |>
                                     wqstd_code == 16 ~  paste0(Char_Name, "- Human Health Toxics"),
                                     TRUE ~ Char_Name
   )) |> 
+  mutate(Year_listed = as.integer(Year_listed)) |> 
   group_by(AU_ID) %>%
   summarise(AU_status = case_when(any(str_detect(final_AU_cat, '5') | str_detect(final_AU_cat, '4') | str_detect(final_AU_cat, '5C'))~ 'Impaired',
                                   any(str_detect(final_AU_cat, '2')) ~ "Attaining",
                                   all(str_detect(final_AU_cat, '3')) ~ "Insufficient Data",
+                                  all(str_detect(final_AU_cat, 'Unassessed')) ~ "Unassessed",
                                   TRUE ~ "ERROR"),
             year_last_assessed = max(year_last_assessed, na.rm = TRUE),
-            Year_listed = ifelse(AU_status == 'Impaired', as.integer(min(Year_listed),  na.rm = TRUE), NA_integer_ ) ,
+            Year_listed = ifelse(AU_status == 'Impaired', min(Year_listed,  na.rm = TRUE), NA_integer_ ) ,
             Cat_5_count = length(pollutant_strd[final_AU_cat == '5' | final_AU_cat == '5C']),
             Cat_4_count = length(pollutant_strd[str_detect(final_AU_cat, '4')]),
             Impaired_count = Cat_5_count + Cat_4_count,
@@ -565,6 +572,7 @@ print_list <- list('AU_decisions'    = AU_decisions      ,
 
 write.xlsx(print_list, file = paste0("C:/Users/tpritch/OneDrive - Oregon/DEQ - Integrated Report - IR_2026/Draft IR/Public_draft/IR_2026_Draft_Rollup-", Sys.Date(),  ".xlsx") )
 write.xlsx(AU_decisions, file = "AU_decisions_update.xlsx")
+write.xlsx(map_display, file = "map_display_update.xlsx")
 
 save(print_list, file = 'draft_list/draft_list.Rdata')
 
